@@ -36,7 +36,7 @@ for the analysis LLM (your subscription pays; no API key needed).
 
 ```bash
 codex plugin marketplace add haritabh17/pgpatchlens
-codex plugin add patchlens
+codex plugin add patchlens@pgpatchlens
 ```
 
 ### OpenCode (or any agent, or no agent)
