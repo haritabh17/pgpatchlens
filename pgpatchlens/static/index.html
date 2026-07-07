@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PatchLens</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400;1,600&family=Source+Sans+3:wght@400;500;600;700&family=Source+Code+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f6f7f9; --card:#ffffff; --cardhead:#fbfcfd; --border:#dde3e8; --border2:#cdd6dd; --hair:#eef1f4; --rowline:#e4e9ee;
+  --text:#1c2733; --body:#33424f; --muted:#5b6b7a; --dim:#8a97a3; --faint:#93a1ad;
+  --pg:#336791; --pgdark:#24506f; --pghover:#2a567a; --pgbg:#e3edf5;
+  --green:#256e47; --greenbg:#e2f2e8; --greenbar:#2f8a5b;
+  --red:#c94f4c; --redbg:#fbeceb; --redtext:#8c3f3b;
+  --amber:#a06a12; --amberbg:#f7efdd; --amberdot:#b97d1e;
+  --chipbg:#e8edf2; --chiptext:#24506f;
+  --diffadd:#cdeeda; --diffaddtext:#14532d; --diffdel:#f8d5d0; --diffdeltext:#7f2a24;
+  --hunkbg:#eef4f8; --hunktext:#4a708e;
+  --serif:'Source Serif 4',Georgia,serif; --mono:'Source Code Pro',Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:var(--bg);color:var(--text);font-family:'Source Sans 3',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--pg);text-decoration:none} a:hover{color:var(--pgdark);text-decoration:underline}
+::selection{background:rgba(51,103,145,.18)}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#c9d2da;border-radius:5px;border:2px solid var(--bg)}
+input::placeholder,textarea::placeholder{color:var(--faint)}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+.mono{font-family:var(--mono)}
+.chip{font-family:var(--mono);font-size:12px;background:var(--chipbg);padding:1.5px 6px;border-radius:4px;color:var(--chiptext)}
+.seclabel{font-family:var(--mono);font-size:12.5px;color:var(--dim)}
+.statuschip{background:var(--pgbg);color:var(--pg);border-radius:4px;padding:3px 10px;font-size:12px;font-weight:600;white-space:nowrap}
+
+/* nav */
+#nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:58px;background:var(--pg);position:sticky;top:0;z-index:20}
+#nav .logo{display:flex;align-items:center;gap:11px;cursor:pointer;min-width:210px}
+#nav .logo .mark{width:27px;height:27px;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--pg)}
+#nav .logo .name{font-family:var(--serif);font-size:19px;font-weight:600;color:#fff}
+#nav .links{display:flex;gap:30px;font-size:14.5px}
+#nav .links span{color:rgba(255,255,255,.72);cursor:pointer}
+#nav .links span:hover{color:#fff}
+#nav .links .active{color:#fff;font-weight:600}
+#nav .auth{display:flex;gap:10px;min-width:210px;justify-content:flex-end}
+#nav .auth .login{padding:7px 15px;border-radius:6px;border:1px solid rgba(255,255,255,.45);font-size:13.5px;font-weight:600;color:#fff}
+#nav .auth .login:hover{border-color:#fff}
+#nav .auth .signup{padding:7px 15px;border-radius:6px;background:#fff;font-size:13.5px;font-weight:600;color:var(--pg)}
+#nav .auth .signup:hover{background:#e9f0f5}
+#toast{position:fixed;top:70px;right:24px;background:var(--text);color:#fff;padding:10px 18px;border-radius:8px;font-size:13.5px;z-index:99;display:none}
+
+/* landing */
+#landing{max-width:1160px;margin:0 auto;padding:72px 32px 0}
+#landing .newline{font-family:var(--mono);font-size:13px;color:var(--pg)}
+#landing h1{margin:22px 0 0;font-family:var(--serif);font-size:56px;line-height:1.14;font-weight:600;letter-spacing:-.01em;max-width:880px}
+#landing h1 em{color:var(--pg)}
+#landing .sub{margin:24px 0 0;font-size:20px;line-height:1.55;color:var(--muted);max-width:740px}
+#landing .inwrap{margin-top:52px;max-width:860px}
+#landing .inlabel{font-family:var(--mono);font-size:13px;color:var(--dim);margin-bottom:10px}
+#landing .inputrow{display:flex;gap:10px}
+#cfinput{flex:1;height:54px;background:#fff;border:1px solid var(--border2);border-radius:8px;padding:0 18px;font-size:14.5px;color:var(--text);outline:none;font-family:var(--mono)}
+#cfinput:focus{border-color:var(--pg)}
+#gobtn{height:54px;padding:0 24px;border-radius:8px;background:var(--pg);color:#fff;font-size:15px;font-weight:600;display:flex;align-items:center;gap:9px;flex-shrink:0}
+#gobtn:hover{background:var(--pghover)}
+#landerr{margin-top:12px;color:var(--red);font-size:14px;display:none}
+#recent{margin-top:44px;max-width:860px}
+#recent .tbl{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-top:10px}
+#recent .hdr,#recent .row{display:grid;grid-template-columns:100px 1fr 170px 110px;gap:16px;padding:13px 18px;align-items:center}
+#recent .hdr{padding:10px 18px;background:#f0f3f6;border-bottom:1px solid var(--border);font-size:11.5px;font-weight:600;letter-spacing:.08em;color:var(--dim)}
+#recent .row{border-bottom:1px solid var(--hair);cursor:pointer}
+#recent .row:last-child{border-bottom:none}
+#recent .row:hover{background:#f6f9fb}
+#landing .feats{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;padding:44px 0 80px;border-top:1px solid var(--border);margin-top:72px}
+#landing .feats h4{font-family:var(--mono);font-size:13px;color:var(--pg);font-weight:400}
+#landing .feats p{margin-top:9px;font-size:15px;line-height:1.55;color:var(--muted)}
+
+/* review layout — resizable rails */
+#review{display:grid;grid-template-columns:320px 5px minmax(0,1fr) 5px 320px;height:calc(100vh - 58px);min-width:900px}
+.rail{overflow-y:auto;padding:22px 20px 48px;background:var(--bg)}
+#leftrail{border-right:1px solid var(--border)}
+#rightrail{border-left:1px solid var(--border)}
+.gutter{cursor:col-resize;background:transparent}
+.gutter:hover,.gutter.drag{background:rgba(51,103,145,.25)}
+#center{overflow-y:auto;padding:30px 40px 0;background:var(--bg)}
+#center .inner{max-width:900px;margin:0 auto}
+
+/* left rail groups */
+.group{padding:15px 2px 14px;border-bottom:1px solid var(--rowline)}
+.group .gt{display:flex;gap:10px;align-items:baseline}
+.group .gnum{font-family:var(--mono);font-size:12.5px;color:var(--pg);font-weight:600;flex-shrink:0}
+.group .gtitle{font-size:14.5px;font-weight:600;line-height:1.45}
+.group .gfiles{margin:7px 0 0 26px;font-size:12px;font-family:var(--mono);line-height:1.8;color:var(--body)}
+.group .gfiles span{color:var(--faint)}
+.group .toggle{margin:9px 0 0 26px;color:var(--pg);font-size:13.5px;font-weight:600;cursor:pointer}
+.group .toggle:hover{color:var(--pgdark)}
+.group .expl{margin:10px 0 4px 26px;font-size:13.5px;color:var(--muted);line-height:1.6}
+.group pre{margin:10px 0 4px 26px;background:var(--hair);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-family:var(--mono);font-size:12px;line-height:1.65;overflow-x:auto;color:var(--body)}
+
+/* center */
+#title{margin:14px 0 0;font-family:var(--serif);font-size:32px;font-weight:600;line-height:1.25}
+#metarow{display:flex;align-items:center;gap:10px;margin-top:16px;font-size:14px;flex-wrap:wrap;color:var(--body)}
+.av{border-radius:50%;background:var(--pg);color:#fff;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tabs{display:flex;gap:26px;margin-top:30px;border-bottom:1px solid var(--border);align-items:baseline}
+.tab{padding-bottom:10px;font-size:15px;color:var(--muted);cursor:pointer}
+.tab:hover{color:var(--text)}
+.tab.active{font-weight:600;color:var(--text);border-bottom:2px solid var(--pg);margin-bottom:-1px}
+.tab .n{font-family:var(--mono);font-size:12.5px;color:var(--dim)}
+.md p{margin:10px 0;font-size:15.5px;line-height:1.7;color:var(--body)}
+.md ol,.md ul{margin:10px 0;padding-left:24px;font-size:15.5px;line-height:1.7;color:var(--body)}
+.md code{font-family:var(--mono);font-size:13px;background:var(--chipbg);padding:1.5px 6px;border-radius:4px;color:var(--chiptext)}
+.md pre{background:#f0f3f6;border:1px solid var(--border);border-radius:6px;padding:18px 22px;font-family:var(--mono);font-size:13px;line-height:1.8;overflow-x:auto;white-space:pre;color:var(--body);margin:12px 0}
+.md pre code{background:none;padding:0;color:inherit}
+h2.sec{margin:36px 0 0;font-family:var(--serif);font-size:22px;font-weight:600}
+.busy{color:var(--muted);font-size:14px;padding:14px 0}
+.busy .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--pg);margin-right:9px;animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.acard{border:1px solid var(--border);background:var(--card);border-radius:8px;margin-top:22px}
+.acard .ah{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;border-bottom:1px solid var(--hair);font-size:15.5px;font-weight:600}
+.acard .ab{padding:4px 24px 22px}
+
+/* diff settings */
+#diffbar{display:flex;align-items:baseline;justify-content:space-between;margin-top:44px;flex-wrap:wrap;gap:8px}
+#diffbar h2{margin:0;font-family:var(--serif);font-size:22px;font-weight:600}
+.gearwrap{position:relative}
+.gear{border:1px solid var(--border2);background:#fff;border-radius:6px;padding:5px 11px;font-size:13px;color:var(--muted)}
+.gear:hover{border-color:var(--pg);color:var(--pg)}
+.gearpop{position:absolute;right:0;top:34px;background:#fff;border:1px solid var(--border2);border-radius:8px;box-shadow:0 6px 20px rgba(28,39,51,.12);padding:12px 16px;z-index:10;width:220px;display:none}
+.gearpop.open{display:block}
+.gearpop label{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--body);padding:5px 0;cursor:pointer}
+
+/* diff files */
+/* no overflow:hidden on .dfile — it would break the sticky header */
+.dfile{border:1px solid var(--border);background:var(--card);border-radius:8px;margin-top:14px}
+.dfile.viewed .dhead{opacity:.65}
+/* file header sticks to the top of the pane until the next file pushes it off */
+.dhead{display:flex;align-items:center;gap:10px;row-gap:2px;flex-wrap:wrap;padding:11px 16px;cursor:pointer;background:var(--cardhead);font-family:var(--mono);font-size:13px;position:sticky;top:0;z-index:4;border-radius:8px}
+.dfile.open .dhead{border-radius:8px 8px 0 0;border-bottom:1px solid var(--border)}
+.dhead:hover{background:#f6f9fb}
+.dhead .fname{font-weight:600;color:var(--text);white-space:nowrap}
+.dhead .fdir{color:var(--faint);font-size:12px}
+.dhead .fstat{margin-left:auto;font-size:12.5px;white-space:nowrap}
+.dhead .viewedbox{display:flex;align-items:center;gap:6px;font-family:'Source Sans 3';font-size:12.5px;color:var(--dim);margin-left:14px}
+.dhead input[type=checkbox]{accent-color:var(--red);width:15px;height:15px;cursor:pointer}
+.dbody{display:none;overflow:hidden;border-radius:0 0 8px 8px}
+.dfile.open .dbody{display:block}
+.hunkhdr{padding:5px 16px;background:var(--hunkbg);color:var(--hunktext);font-family:var(--mono);font-size:12px;font-style:italic;white-space:pre;overflow-x:auto}
+.dline{display:flex;font-family:var(--mono);font-size:12.5px;line-height:1.85;white-space:pre}
+.dline .ln{width:44px;flex-shrink:0;text-align:right;padding-right:10px;color:var(--faint);user-select:none}
+.dline .txt{flex:1;padding-right:8px;white-space:pre-wrap;overflow-wrap:anywhere}
+.dline.add{background:var(--diffadd);color:var(--diffaddtext)}
+.dline.del{background:var(--diffdel);color:var(--diffdeltext)}
+.dline.ctx{color:var(--body)}
+.dline .plus{width:22px;flex-shrink:0;text-align:center;color:transparent;cursor:pointer;border-radius:4px;font-weight:700}
+.dline:hover .plus.can{color:#fff;background:var(--pg)}
+/* side-by-side */
+.sbsrow{display:grid;grid-template-columns:1fr 1fr;font-family:var(--mono);font-size:12.5px;line-height:1.85}
+.sbscell{display:flex;white-space:pre;overflow:hidden;border-right:1px solid var(--hair)}
+.sbscell:last-child{border-right:none}
+.sbscell .ln{width:40px;flex-shrink:0;text-align:right;padding-right:8px;color:var(--faint);user-select:none}
+.sbscell .txt{flex:1;padding-right:8px;white-space:pre-wrap;overflow-wrap:anywhere}
+.sbscell.add{background:var(--diffadd);color:var(--diffaddtext)}
+.sbscell.del{background:var(--diffdel);color:var(--diffdeltext)}
+.sbscell.ctx{color:var(--body)}
+.sbscell.empty{background:#f4f6f8}
+.sbscell .plus{width:20px;flex-shrink:0;text-align:center;color:transparent;cursor:pointer;border-radius:4px;font-weight:700}
+.sbscell:hover .plus.can{color:#fff;background:var(--pg)}
+
+.composer{padding:12px 16px;background:#f6f9fb;border-top:1px solid var(--rowline);border-bottom:1px solid var(--rowline)}
+.composer textarea{width:100%;min-height:70px;border:1px solid var(--border2);border-radius:6px;padding:10px 12px;font-size:13.5px;font-family:'Source Sans 3';color:var(--text);background:#fff;outline:none;resize:vertical}
+.composer .row{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+.btn{padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer}
+.btn.pri{background:var(--pg);color:#fff}
+.btn.pri:hover{background:var(--pghover)}
+.btn.sec{border:1px solid var(--border2);color:var(--muted);background:#fff}
+.btn.sec:hover{border-color:var(--faint)}
+.draft{padding:10px 16px;background:#f6f9fb;border-top:1px solid var(--rowline);border-bottom:1px solid var(--rowline)}
+.draft .dh{display:flex;align-items:center;gap:8px;font-size:13px}
+.draft .dh .dav{width:20px;height:20px;border-radius:50%;background:var(--pg);color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.draft .dh .who{font-weight:600}
+.draft .dh .tag{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.draft .dh .del{margin-left:auto;color:var(--faint);cursor:pointer}
+.draft .dh .del:hover{color:var(--red)}
+.draft .body{margin-top:7px;font-size:13.5px;line-height:1.55;color:var(--body);white-space:pre-wrap;font-family:'Source Sans 3';max-width:640px}
+
+/* thread + patches */
+.msg{border:1px solid var(--border);background:var(--card);border-radius:8px;padding:16px 20px;margin-top:14px}
+.msg .mh{display:flex;align-items:center;gap:10px}
+.msg .who{font-size:14px;font-weight:600}
+.msg .when{font-family:var(--mono);font-size:12px;color:var(--dim);margin-left:auto}
+.msg .body{margin-top:12px;font-size:14.5px;line-height:1.6;color:var(--body);white-space:pre-wrap;max-height:300px;overflow-y:auto}
+.patchrow{border:1px solid var(--border);background:var(--card);border-radius:8px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-top:10px;font-family:var(--mono);font-size:13px}
+.applies{font-size:12px;font-weight:600;padding:3px 10px;border-radius:4px;font-family:'Source Sans 3'}
+.applies.ok{color:var(--green);background:var(--greenbg)}
+.applies.no{color:var(--red);background:var(--redbg)}
+
+/* sticky review bar + draft preview */
+#reviewbar{position:sticky;bottom:16px;margin-top:36px;background:#fff;border:1px solid var(--border2);border-radius:10px;box-shadow:0 4px 16px rgba(28,39,51,.10);z-index:5;overflow:hidden}
+#reviewbar .bar{padding:12px 14px 12px 20px;display:flex;align-items:center;gap:14px}
+#reviewbar .count{font-size:14px;color:var(--body)}
+#reviewbar .previewtoggle{font-size:13px;color:var(--pg);font-weight:600;cursor:pointer}
+#reviewbar .finish{padding:9px 18px;border-radius:8px;background:var(--pg);color:#fff;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+#reviewbar .finish:hover{background:var(--pghover)}
+#draftpreview{border-top:1px solid var(--border);background:var(--cardhead);padding:14px 20px;display:none;max-height:280px;overflow-y:auto}
+#draftpreview pre{font-family:var(--mono);font-size:12px;line-height:1.6;white-space:pre-wrap;color:var(--body)}
+
+/* right rail */
+.rtabs{display:flex;gap:6px;margin-bottom:20px}
+.rtab{padding:6px 15px;border-radius:6px;color:var(--muted);font-size:13.5px;cursor:pointer}
+.rtab:hover{color:var(--text)}
+.rtab.active{background:var(--pgbg);color:var(--pg);font-weight:600}
+.frow{padding:13px 2px;border-bottom:1px solid var(--rowline)}
+.frow .in{display:flex;gap:9px}
+.frow .fdot{flex-shrink:0;width:8px;height:8px;border-radius:50%;margin-top:6px}
+.frow .ft{font-size:14px;line-height:1.5;color:var(--text)}
+.frow.dim .ft{color:var(--muted)}
+.frow .fm{margin-top:5px;font-size:12.5px}
+.frow .fm .sev{font-weight:600}
+.frow .fm .loc{font-family:var(--mono);font-size:12px;color:var(--dim);margin-left:8px;cursor:pointer}
+.frow .fm .loc:hover{color:var(--pg)}
+.frow .fdetail{margin-top:4px;font-size:12.5px;color:var(--muted);line-height:1.5}
+.frow code{font-family:var(--mono);font-size:11.5px;background:var(--chipbg);padding:1px 5px;border-radius:4px;color:var(--chiptext)}
+.frow pre{margin:6px 0;background:#f0f3f6;border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:var(--mono);font-size:11.5px;line-height:1.6;overflow-x:auto;white-space:pre-wrap}
+/* two classes to outrank .dline.add/.del whose background shorthand clears background-image */
+.dline.lnhl,.sbscell.lnhl{background-image:linear-gradient(rgba(217,161,61,.22),rgba(217,161,61,.22));box-shadow:inset 3px 0 0 var(--amber)}
+/* per-finding severity markers on diff lines — clickable back to the finding */
+.dline,.sbscell{position:relative}
+.fbar{position:absolute;left:0;top:0;bottom:0;width:7px;cursor:pointer}
+.fbar:hover{filter:brightness(.75)}
+.sevbar-Bug{background:var(--red)}
+.sevbar-Investigate{background:var(--amberdot)}
+.sevbar-Informational{background:#b3bec7}
+.frow.flash{animation:frowflash 1.6s ease-out}
+@keyframes frowflash{0%{background:var(--amberbg)}100%{background:transparent}}
+/* drag selection wash — same specificity trick as .lnhl */
+.dline.selng,.sbscell.selng{background-image:linear-gradient(rgba(51,103,145,.18),rgba(51,103,145,.18));box-shadow:inset 3px 0 0 var(--pg)}
+/* chat */
+.cb{border-radius:10px;padding:10px 14px;margin-top:10px;font-size:13.5px;line-height:1.55}
+.cb.user{background:var(--pgbg);color:var(--text);margin-left:24px;font-family:'Source Sans 3'}
+.cb.bot{background:#fff;border:1px solid var(--border);margin-right:8px}
+.cb p{margin:6px 0;font-size:13.5px;line-height:1.6}
+.cb pre{background:#f0f3f6;border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-size:11.5px;line-height:1.6;margin:8px 0;font-family:var(--mono);overflow-x:auto;white-space:pre-wrap}
+.cb code{font-family:var(--mono);font-size:12px;background:var(--chipbg);padding:1px 5px;border-radius:4px;color:var(--chiptext)}
+.cb pre code{background:none;padding:0;color:inherit}
+.cb.user pre{background:#fff}
+#chatinput{width:100%;min-height:110px;max-height:40vh;border:1px solid var(--border2);border-radius:8px;padding:9px 11px;font-size:13.5px;font-family:'Source Sans 3';color:var(--text);outline:none;resize:vertical;background:#fff;margin-top:12px;overflow-y:auto}
+#chatinput:focus{border-color:var(--pg)}
+.markread{border:1px solid var(--border2);border-radius:6px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;background:#fff}
+.markread:hover{border-color:var(--pg);color:var(--pg)}
+.cibar{display:flex;height:5px;border-radius:999px;overflow:hidden;margin-top:12px;gap:2px}
+.meta .row{display:flex;padding:9px 2px;font-size:13.5px}
+.meta .k{width:92px;color:var(--dim);flex-shrink:0}
+.meta .v{color:var(--body)}
+
+/* modal */
+#modalbg{position:fixed;inset:0;background:rgba(28,39,51,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:24px}
+#modal{width:640px;max-width:100%;max-height:84vh;overflow-y:auto;background:#fff;border-radius:12px;box-shadow:0 20px 60px rgba(28,39,51,.28)}
+#modal .mh{display:flex;justify-content:space-between;padding:18px 24px;border-bottom:1px solid var(--rowline)}
+#modal .mh h3{font-family:var(--serif);font-size:21px;font-weight:600}
+#modal .mh .x{color:var(--faint);font-size:18px;cursor:pointer;padding:2px 6px}
+#modal .mh .x:hover{color:var(--text)}
+#modal .mb{padding:18px 24px 20px}
+#modal .lbl{font-family:var(--mono);font-size:12.5px;color:var(--dim);margin:16px 0 8px}
+#modal .dc{border:1px solid var(--rowline);border-radius:8px;padding:12px 14px;margin-top:10px}
+#modal .dc .loc{font-family:var(--mono);font-size:12px;color:var(--pg)}
+#modal .dc .b{margin-top:5px;font-size:13.5px;line-height:1.55;color:var(--body);white-space:pre-wrap}
+#modal textarea{width:100%;min-height:88px;border:1px solid var(--border2);border-radius:8px;padding:11px 13px;font-size:13.5px;font-family:'Source Sans 3';color:var(--text);outline:none;resize:vertical;background:#fff}
+#modal .mf{padding:16px 24px;border-top:1px solid var(--rowline);background:var(--cardhead);display:flex;gap:10px;justify-content:flex-end;border-radius:0 0 12px 12px}
+#emailout{display:none;padding:0 24px 20px}
+#emailout pre{background:#f0f3f6;border:1px solid var(--border);border-radius:8px;padding:14px;font-family:var(--mono);font-size:12px;line-height:1.6;white-space:pre-wrap;max-height:300px;overflow-y:auto;color:var(--body)}
+</style>
+</head>
+<body>
+
+<div id="nav">
+  <div class="logo" onclick="goLanding()"><div class="mark">pg</div><span class="name">PatchLens</span></div>
+  <div class="links">
+    <span onclick="goLanding()">Home</span>
+    <span class="active">Reviews</span>
+    <span onclick="window.open('https://wiki.postgresql.org/wiki/Reviewing_a_Patch','_blank')">Docs ↗</span>
+  </div>
+  <div class="auth">
+    <div class="login" onclick="toast('Community-account sign-in is coming soon — reviews compose to email in the meantime.')">Log in</div>
+    <div class="signup" onclick="toast('PatchLens uses your PostgreSQL community account — sign-up coming soon.')">Sign up</div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<div id="landing">
+  <div class="newline">-- new: cfbot CI results inline in every review</div>
+  <h1>Understand a <em style="font-style:italic">Postgres patch</em> before you open the diff.</h1>
+  <p class="sub">PatchLens applies the latest series from the thread, organizes it into reviewable changes, and flags what needs a human — with cfbot CI alongside.</p>
+  <div class="inwrap">
+    <div class="inlabel">-- paste a commitfest entry</div>
+    <div class="inputrow">
+      <input id="cfinput" placeholder="commitfest.postgresql.org/patch/6091" spellcheck="false">
+      <button id="gobtn" onclick="go()">Review <span>→</span></button>
+    </div>
+    <div id="landerr"></div>
+  </div>
+  <div id="recent" style="display:none">
+    <div class="inlabel">-- recent entries</div>
+    <div class="tbl">
+      <div class="hdr"><span>ENTRY</span><span>TITLE</span><span>STATUS</span><span>LATEST</span></div>
+      <div id="recentrows"></div>
+    </div>
+  </div>
+  <div class="feats">
+    <div><h4>-- organized diffs</h4><p>Hunks grouped into logical changes and ordered for reading — infrastructure first, mechanical churn last.</p></div>
+    <div><h4>-- bugs &amp; flags</h4><p>Findings ranked Bug → Investigate → Informational, each anchored to a file and line in the series.</p></div>
+    <div><h4>-- commitfest-native</h4><p>Reads the thread, applies the latest series to master, and tracks cfbot CI per entry.</p></div>
+  </div>
+</div>
+
+<div id="review" style="display:none">
+  <div class="rail" id="leftrail"></div>
+  <div class="gutter" id="lgutter"></div>
+  <div id="center"><div class="inner" id="centerinner"></div></div>
+  <div class="gutter" id="rgutter"></div>
+  <div class="rail" id="rightrail"></div>
+</div>
+
+<div id="modalbg">
+  <div id="modal">
+    <div class="mh"><div><h3>Post review</h3><div class="mono" style="font-size:12.5px;color:var(--dim);margin-top:3px" id="modalsub"></div></div>
+      <span class="x" onclick="closeModal()">×</span></div>
+    <div class="mb">
+      <div class="lbl">-- draft comments</div>
+      <div id="modaldrafts"></div>
+      <div class="lbl">-- summary remarks</div>
+      <textarea id="summarybox" placeholder="Overall assessment for the thread — design, performance claims, tests, docs…"></textarea>
+    </div>
+    <div id="emailout"><div class="lbl" style="padding-left:0">-- composed reply (In-Reply-To set to the latest thread message)</div><pre id="emailtext"></pre></div>
+    <div class="mf">
+      <button class="btn sec" onclick="closeModal()">Cancel</button>
+      <button class="btn sec" id="copybtn" style="display:none" onclick="copyEmail()">Copy email</button>
+      <a class="btn pri" id="mailtobtn" style="display:none;text-decoration:none">Open in mail client</a>
+      <button class="btn pri" id="composebtn" onclick="composeEmail()">Compose reply →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let S = null, entryId = null, es = null, steps = [];
+let openGroup = 1, tab = 'analysis', rtab = 'info';
+let collapsedFiles = new Set(), viewedFiles = new Set(), composerAt = null;
+let hl = null;                 // {file, from, to} — highlighted line range from a finding jump
+let flashId = null;            // finding id to flash in the right rail
+let dragSel = null;            // {file, side, start, end} while drag-selecting lines
+let chatLog = [], chatDraft = '', chatPending = false;
+function focusFinding(id){
+  rtab='info'; flashId=id; render();
+  setTimeout(()=>{ document.getElementById('frow-'+id)?.scrollIntoView({block:'center'}); },50);
+  setTimeout(()=>{ flashId=null; },1700);   // animation is one-shot; just clear the state
+}
+let headExtra = 0, tailExtra = 0;      // messages revealed beyond first-1 / last-5
+function showHead(n){ headExtra += n; render(); }
+function showTail(n){ tailExtra += n; render(); }
+let diffMode = new URLSearchParams(location.search).get('view')
+            || localStorage.getItem('pl_diffmode') || 'inline';   // 'inline' | 'sbs'
+let gearOpen = false, previewOpen = false;
+
+const $ = id => document.getElementById(id);
+const esc = s => (s??'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* anonymous per-browser identity — a future community-account login claims this token */
+const UID = localStorage.pl_uid || (localStorage.pl_uid =
+  (crypto.randomUUID ? crypto.randomUUID() : 'u'+Date.now()+Math.random().toString(36).slice(2)));
+const api = (url, opts={}) => fetch(url, {...opts, headers:{...(opts.headers||{}), 'X-PatchLens-User': UID}});
+
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',3200); }
+
+/* tiny markdown */
+function md(src){
+  if(!src) return '';
+  const fences=[]; src=src.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,l,c)=>{fences.push(c);return `\x00${fences.length-1}\x00`;});
+  let out=esc(src).replace(/^### (.*)$/gm,'<b>$1</b>').replace(/^## (.*)$/gm,'<b>$1</b>')
+    .replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/`([^`]+)`/g,'<code>$1</code>');
+  const blocks=out.split(/\n{2,}/).map(b=>{
+    if(/^(\d+\. |[-*] )/m.test(b)){
+      const items=b.split('\n').filter(x=>x.trim()).map(x=>'<li>'+x.replace(/^(\d+\. |[-*] )/,'')+'</li>').join('');
+      return (/^\d/.test(b.trim())?'<ol>':'<ul>')+items+(/^\d/.test(b.trim())?'</ol>':'</ul>');
+    }
+    return '<p>'+b.replace(/\n/g,'<br>')+'</p>';
+  });
+  return blocks.join('').replace(/\x00(\d+)\x00/g,(_,i)=>'<pre><code>'+esc(fences[+i])+'</code></pre>');
+}
+/* inline-only markdown for findings: `code`, ```blocks```, **bold** — no paragraphs */
+function mdMini(src){
+  if(!src) return '';
+  const fences=[]; src=src.replace(/```\w*\n?([\s\S]*?)```/g,(_,c)=>{fences.push(c);return `\x00${fences.length-1}\x00`;});
+  return esc(src).replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')
+    .replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\n/g,'<br>')
+    .replace(/\x00(\d+)\x00/g,(_,i)=>'<pre>'+esc(fences[+i])+'</pre>');
+}
+function initials(name){ const p=(name||'?').replace(/<.*/,'').trim().split(/\s+/); return ((p[0]||'?')[0]+(p[1]?p[1][0]:'')).toUpperCase(); }
+
+/* ---------- navigation: the hash is the source of truth ---------- */
+function route(){
+  const m = location.hash.match(/#\/patch\/(\d+)/);
+  if(m) openEntry(+m[1]);
+  else showLanding();
+}
+function showLanding(){
+  if(es) es.close();
+  entryId = null;
+  $('review').style.display='none'; $('landing').style.display='block';
+  loadRecent();
+}
+function goLanding(){ if(location.hash) location.hash=''; else showLanding(); }
+async function openEntry(id){
+  if(entryId===id && $('review').style.display==='grid') return;   // already showing
+  // POST is idempotent: cached entries return immediately, new ones start the pipeline
+  const r = await api('/api/entries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:String(id)})});
+  if(!r.ok){ showLanding(); const e=await r.json().catch(()=>({detail:'request failed'})); $('landerr').textContent=e.detail; $('landerr').style.display='block'; return; }
+  entryId = id;
+  steps=[]; collapsedFiles=new Set(); viewedFiles=new Set(); composerAt=null; openGroup=1; tab='analysis'; previewOpen=false; headExtra=0; tailExtra=0; chatLog=[]; chatDraft=''; chatPending=false;
+  $('landing').style.display='none'; $('review').style.display='grid';
+  await refresh();
+  chatLog = (S?.chat||[]).map(m=>({role:m.role, content:m.content}));   // hydrate persisted chat
+  if(es) es.close();
+  es = new EventSource(`/api/entries/${entryId}/stream`);
+  es.onmessage = async ev => {
+    const step = JSON.parse(ev.data).step;
+    steps.push(step);
+    if(step==='done' || step==='error') es.close();   // stop EventSource's auto-reconnect replay
+    await refresh();
+  };
+}
+async function go(url){
+  url = (url ?? $('cfinput').value).toString().trim();
+  if(!url) return;
+  $('landerr').style.display='none';
+  const r = await api('/api/entries',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+  if(!r.ok){ const e=await r.json().catch(()=>({detail:'request failed'})); $('landerr').textContent=e.detail; $('landerr').style.display='block'; return; }
+  const id = (await r.json()).id;
+  if(location.hash === `#/patch/${id}`) route();
+  else location.hash = `/patch/${id}`;      // hashchange listener does the rest
+}
+async function refresh(){
+  const r = await api(`/api/entries/${entryId}`);
+  if(r.ok){ S = await r.json(); render(); }
+}
+async function loadRecent(){
+  const r = await api('/api/entries'); if(!r.ok) return;
+  const rows = (await r.json()).filter(e=>e.title);
+  if(!rows.length) return;
+  $('recent').style.display='block';
+  $('recentrows').innerHTML = rows.map(e=>`<div class="row" onclick="go('${e.id}')">
+    <span class="mono" style="font-size:13px;color:var(--pg)">${e.id}</span>
+    <span style="font-size:14.5px">${esc(e.title)}</span>
+    <span><span class="statuschip" style="${statusStyle(e.status)}">${esc(e.status||'')}</span></span>
+    <span class="mono" style="font-size:12.5px;color:var(--dim)">${esc(e.version||'')} · ${esc((e.fetched_at||'').slice(0,10))}</span>
+  </div>`).join('');
+}
+function statusStyle(s){
+  s=(s||'').toLowerCase();
+  if(s.includes('ready')) return 'background:var(--greenbg);color:var(--green)';
+  if(s.includes('waiting')) return 'background:var(--amberbg);color:var(--amber)';
+  if(s.includes('committed')) return 'background:var(--greenbg);color:var(--green)';
+  if(s.includes('returned')||s.includes('withdrawn')||s.includes('rejected')) return 'background:var(--redbg);color:var(--red)';
+  return '';
+}
+
+/* ---------- render ---------- */
+function running(){ const st=S?.analysis?.state; return st==='running' || (!st && !steps.includes('done')); }
+function busy(label){ return `<div class="busy"><span class="dot"></span>${label}</div>`; }
+
+function render(){
+  if(!S || !S.entry) return;
+  // innerHTML replacement clamps pane scroll to 0 — save and restore all three panes
+  const panes=[$('center'),$('leftrail'),$('rightrail')];
+  const scrolls=panes.map(p=>p.scrollTop);
+  renderLeft(); renderCenter(); renderRight();
+  panes.forEach((p,i)=>p.scrollTop=scrolls[i]);
+  refreshDraftPreview();
+}
+
+function renderLeft(){
+  const e=S.entry, groups=S.changes||[];
+  let h = `<div style="display:flex;justify-content:space-between;margin-bottom:6px">
+    <span class="seclabel">-- reading order</span>
+    <span class="seclabel" style="font-size:12px">${esc(e.cf_id||'CF')} · ${e.id}</span></div>`;
+  if(!groups.length){ h += running() ? busy('Grouping hunks into changes…') : '<div class="busy">No change groups.</div>'; }
+  for(const g of groups){
+    const open = openGroup===g.ordinal;
+    h += `<div class="group">
+      <div class="gt"><span class="gnum">${String(g.ordinal).padStart(2,'0')}</span><div class="gtitle">${esc(g.title)}</div></div>
+      <div class="gfiles">${g.files.map(f=>{const i=f.lastIndexOf('/');return `<div>${esc(i<0?f:f.slice(i+1))}<span>  ${esc(i<0?'':f.slice(0,i))}</span></div>`;}).join('')}</div>
+      <div class="toggle" onclick="toggleGroup(${g.ordinal})">${open?'Hide':'Read'} explanation ›</div>
+      ${open ? (g.explanation_md ? `<div class="expl">${md(g.explanation_md)}</div>${g.snippet?`<pre>${esc(g.snippet)}</pre>`:''}` : busy('Writing explanation…')) : ''}
+    </div>`;
+  }
+  $('leftrail').innerHTML = h;
+}
+function toggleGroup(n){ openGroup = openGroup===n?null:n; render(); }
+
+function renderCenter(){
+  const e=S.entry, s=S.series||{}, a=S.analysis||{};
+  const files = S.diff ? parseCachedDiff() : [];
+  const adds = files.reduce((x,f)=>x+f.additions,0), dels = files.reduce((x,f)=>x+f.deletions,0);
+  const nmsg=(S.messages||[]).length, npatch=(S.patches||[]).length, ncmt=(S.comments||[]).length;
+  let h = `<div style="display:flex;align-items:center;gap:14px">
+    <span class="statuschip" style="${statusStyle(e.status)}">${esc(e.status||'…')}</span>
+    <span class="mono" style="font-size:13px;color:var(--dim)">commitfest.postgresql.org / ${esc(e.cf_id||'')} / patch ${e.id}</span></div>
+  <h1 id="title">${esc(e.title||'Loading…')}</h1>
+  <div id="metarow">
+    <div class="av" style="width:26px;height:26px;font-size:10.5px">${initials(e.authors)}</div>
+    <span>${esc((e.authors||'').split(',')[0])}</span>
+    <span class="chip">master</span><span style="color:var(--faint)">←</span>
+    <span class="chip">${esc(s.version||'v?')} series · ${npatch} patch${npatch===1?'':'es'}</span>
+    <span style="margin-left:6px">${files.length} file${files.length===1?'':'s'}</span>
+    <span class="mono" style="color:var(--green)">+${adds}</span>
+    <span class="mono" style="color:var(--red)">−${dels}</span>
+  </div>
+  <div class="tabs">
+    <div class="tab ${tab==='analysis'?'active':''}" onclick="setTab('analysis')">Analysis</div>
+    <div class="tab ${tab==='thread'?'active':''}" onclick="setTab('thread')">Thread <span class="n">${nmsg}</span></div>
+    <div class="tab ${tab==='patches'?'active':''}" onclick="setTab('patches')">Patches <span class="n">${npatch}</span></div>
+  </div>`;
+
+  if(tab==='analysis'){
+    h += `<div class="acard"><div class="ah"><span>PatchLens analysis</span></div>
+      <div class="ab md">${a.overview_md ? md(a.overview_md) : (a.state==='error'?'<p style="color:var(--red)">Analysis failed — check server logs and retry.</p>': a.state==='no_branch'?'<p>cfbot has no branch for this entry — the series does not currently apply to master.</p>': busy('Reading the diff and grouping changes…'))}</div></div>`;
+    if(a.summary_md) h += `<h2 class="sec">Summary</h2><div class="md">${md(a.summary_md)}</div>`;
+    if(files.length){
+      h += `<div id="diffbar"><h2>Diffs</h2>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span class="mono" style="font-size:12.5px;color:var(--dim)">${files.length} file${files.length===1?'':'s'} · <span style="color:var(--green)">+${adds}</span> <span style="color:var(--red)">−${dels}</span></span>
+          <div class="gearwrap"><button class="gear" onclick="toggleGear(event)">⚙ View</button>
+            <div class="gearpop ${gearOpen?'open':''}" onclick="event.stopPropagation()">
+              <div class="seclabel" style="margin-bottom:6px">-- diff layout</div>
+              <label><input type="radio" name="dm" ${diffMode==='inline'?'checked':''} onchange="setDiffMode('inline')"> Inline (unified)</label>
+              <label><input type="radio" name="dm" ${diffMode==='sbs'?'checked':''} onchange="setDiffMode('sbs')"> Side by side</label>
+            </div></div>
+        </div></div>
+      <div class="seclabel" style="margin-top:6px">-- reading order follows the change groups · check a file red to mark it viewed and collapse it</div>`;
+      readingOrder(files).forEach(f=>{ h += renderFile(f); });
+    }
+    h += renderReviewBar(ncmt);
+  } else if(tab==='thread'){
+    const msgs = S.messages||[];
+    if(msgs.length) h += `<div class="seclabel" style="margin-top:22px">-- ${msgs.length} message${msgs.length===1?'':'s'} · ${esc((msgs[0].sent_at||'').slice(0,10))} → ${esc((msgs[msgs.length-1].sent_at||'').slice(0,10))} · oldest first</div>`;
+    if(a.thread_summary_md) h += `<div class="acard" style="margin-top:12px"><div class="ah"><span>Thread summary</span></div><div class="ab md" style="font-size:14.5px">${md(a.thread_summary_md)}</div></div>`;
+    const archiveUrl = m => `https://www.postgresql.org/message-id/${encodeURIComponent(m.msgid)}`;
+    const msgCard = m => `<div class="msg"><div class="mh">
+        <div class="av" style="width:24px;height:24px;font-size:10px">${initials(m.author)}</div>
+        <span class="who">${esc((m.author||'').replace(/&lt;.*/,''))}</span>
+        <span class="when">${esc(m.sent_at)}${m.msgid?` · <a href="${archiveUrl(m)}" target="_blank" title="view this message on pgsql-hackers" style="text-decoration:none">↗</a>`:''}</span></div>
+        <div class="body">${esc(m.body_excerpt)}</div>
+        ${(m.body_excerpt||'').length>=20000 && m.msgid?`<div class="mono" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border2);font-size:12px;color:var(--dim)">-- message truncated · <a href="${archiveUrl(m)}" target="_blank">read the full message on pgsql-hackers ↗</a></div>`:''}</div>`;
+    // head (proposal + expansion downward) + tail (latest 5 + expansion upward);
+    // the middle collapses behind the divider
+    const headLen = Math.min(msgs.length, 1 + headExtra);
+    const tailLen = Math.min(msgs.length - headLen, 5 + tailExtra);
+    const head = msgs.slice(0, headLen);
+    const tail = tailLen>0 ? msgs.slice(-tailLen) : [];
+    const hidden = msgs.length - head.length - tail.length;
+    if(hidden > 0){
+      for(const m of head) h += msgCard(m);
+      h += `<div style="text-align:center;font-size:13px;color:var(--dim);padding:12px 0;display:flex;align-items:center;gap:14px;justify-content:center">
+        <span style="flex:1;border-top:1px dashed var(--border2)"></span>
+        <a href="javascript:void 0" onclick="showHead(5)" title="reveal the next 5 messages after the ones above" style="font-size:13px;font-weight:600">↓ show 5</a>
+        <span class="mono" style="font-size:12px">${hidden} in between</span>
+        <a href="javascript:void 0" onclick="showTail(5)" title="reveal the 5 messages before the ones below" style="font-size:13px;font-weight:600">↑ show 5</a>
+        <a href="javascript:void 0" onclick="showTail(1e9)" style="font-size:13px;font-weight:600">show all</a>
+        <span style="flex:1;border-top:1px dashed var(--border2)"></span></div>`;
+      for(const m of tail) h += msgCard(m);
+    } else {
+      for(const m of msgs) h += msgCard(m);
+    }
+    if(e.thread_msgid) h += `<div style="text-align:center;font-size:13.5px;padding:16px 0"><a target="_blank" href="https://www.postgresql.org/message-id/flat/${encodeURIComponent(e.thread_msgid)}">View all ${nmsg} messages on pgsql-hackers ↗</a></div>`;
+    h += renderReviewBar(ncmt);
+  } else {
+    for(const p of (S.patches||[])){
+      h += `<div class="patchrow"><a style="flex:1" href="${esc(p.url)}" target="_blank">${esc(p.filename)}</a>
+        <span class="applies ${s.applies?'ok':'no'}">${s.applies?'applies ✓':'applies ✗'}</span></div>`;
+    }
+    if(s.base_sha) h += `<div class="mono" style="font-size:12.5px;color:var(--dim);padding:10px 4px">series ${s.applies?'applies cleanly to':'does not apply to'} master @ ${esc(s.base_sha.slice(0,10))} · mirrored at cfbot branch <a target="_blank" href="https://github.com/postgresql-cfbot/postgresql/tree/cf/${e.id}">cf/${e.id}</a></div>`;
+    if(!npatch) h += `<div class="busy" style="margin-top:20px">No patch attachments found on the thread.</div>`;
+    h += renderReviewBar(ncmt);
+  }
+  h += `<div style="height:28px"></div>`;
+  $('centerinner').innerHTML = h;
+}
+function setTab(t){ tab=t; render(); $('center').scrollTop=0; }   // new tab starts at the top
+function toggleGear(ev){ ev.stopPropagation(); gearOpen=!gearOpen; render(); }
+document.addEventListener('click', ()=>{ if(gearOpen){ gearOpen=false; render(); } });
+function setDiffMode(m){ diffMode=m; localStorage.setItem('pl_diffmode',m); gearOpen=false; render(); }
+
+function renderReviewBar(ncmt){
+  const label = ncmt ? `${ncmt} draft comment${ncmt===1?'':'s'}` : 'No draft comments yet — click a + in the diff';
+  return `<div id="reviewbar">
+    <div class="bar">
+      <span class="seclabel">-- your review</span>
+      <span class="count">${label}</span>
+      ${ncmt?`<span class="previewtoggle" onclick="togglePreview()">${previewOpen?'Hide':'Show'} draft reply ⌄</span>`:''}
+      <div style="flex:1"></div>
+      <button class="finish" onclick="openModal()">Finish review <span>→</span></button>
+    </div>
+    <div id="draftpreview" style="${previewOpen&&ncmt?'display:block':''}"><pre id="draftpreviewtext">Composing…</pre></div>
+  </div>`;
+}
+function togglePreview(){ previewOpen=!previewOpen; render(); }
+let _lastPreviewKey = '';
+async function refreshDraftPreview(){
+  const ncmt=(S?.comments||[]).length;
+  if(!previewOpen || !ncmt) return;
+  const key = JSON.stringify(S.comments);
+  const box = $('draftpreviewtext');
+  if(!box) return;
+  if(key===_lastPreviewKey && box.textContent!=='Composing…'){ return; }
+  const r = await api(`/api/entries/${entryId}/compose`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({summary:''})});
+  if(r.ok){ _lastPreviewKey=key; const el=$('draftpreviewtext'); if(el) el.textContent=(await r.json()).email_text; }
+}
+
+/* sort parsed files by the change group they first appear in (pass A's review order) */
+function readingOrder(files){
+  const pos={};
+  let i=0;
+  for(const g of (S.changes||[])) for(const p of g.files)
+    if(!(p in pos)) pos[p]={rank:i++, group:g.ordinal};
+  const base=p=>p.split('/').pop();
+  const lookup=f=>{
+    if(pos[f.path]) return pos[f.path];
+    const hit=Object.keys(pos).find(p=>base(p)===base(f.path));   // LLM sometimes shortens paths
+    return hit?pos[hit]:null;
+  };
+  return files.map(f=>({...f, _g:lookup(f)}))
+              .sort((a,b)=>(a._g?a._g.rank:1e9)-(b._g?b._g.rank:1e9));
+}
+
+let _cachedDiff=null,_cachedParsed=null;
+function parseCachedDiff(){
+  if(_cachedDiff===S.diff) return _cachedParsed;
+  _cachedDiff=S.diff; _cachedParsed=parseDiff(S.diff||'');
+  return _cachedParsed;
+}
+function parseDiff(diff){
+  const files=[]; let cur=null, o=0, n=0;
+  for(const line of diff.split('\n')){
+    if(line.startsWith('diff --git')){
+      const m=line.match(/diff --git a\/(.*) b\/(.*)/);
+      cur={path:m[2],additions:0,deletions:0,hunks:[]}; files.push(cur);
+    } else if(cur && line.startsWith('@@')){
+      const m=line.match(/@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@(.*)/);
+      o=+m[1]; n=+m[2]; cur.hunks.push({header:line,lines:[]});
+    } else if(cur && cur.hunks.length && ('+- \\'.includes(line[0]||''))){
+      const h=cur.hunks[cur.hunks.length-1], t=line[0];
+      if(t==='+'){h.lines.push(['+',null,n++,line.slice(1)]);cur.additions++;}
+      else if(t==='-'){h.lines.push(['-',o++,null,line.slice(1)]);cur.deletions++;}
+      else if(t===' '){h.lines.push([' ',o++,n++,line.slice(1)]);}
+    }
+  }
+  return files;
+}
+
+/* draft cards + composer, anchored to the LAST line/row of a comment's range */
+function describeRange(side,line,lineTo){
+  if(side==='rows') return `${lineTo-line+1} selected lines (added + removed)`;
+  return `${side==='old'?'removed ':''}line${lineTo?`s ${line}–${lineTo}`:` ${line}`}`;
+}
+function lineWidgets(f, comments, t, ol, nl, ri){
+  const anchorLine = c => c.line_to || c.line;
+  const hits = c => c.side==='rows' ? anchorLine(c)===ri
+    : c.side==='old' ? (t==='-' && anchorLine(c)===ol)
+    : (nl!=null && anchorLine(c)===nl);
+  let h='';
+  for(const c of comments.filter(hits)){
+    h+=`<div class="draft"><div class="dh"><div class="dav">Y</div><span class="who">you</span><span class="tag">draft — only visible to you · on ${describeRange(c.side,c.line,c.line_to)}</span>
+      <span class="del" onclick="delComment(${c.id})">✕</span></div>
+      <div class="body">${esc(c.body)}</div></div>`;
+  }
+  const ca=composerAt;
+  if(ca && ca.file===f.path && ca.riTo===ri){
+    const caRng = describeRange(ca.side, ca.line, ca.lineTo);
+    h+=`<div class="composer"><textarea id="composerbox" placeholder="Leave a review comment on ${caRng}…"></textarea>
+      <div class="row">
+      <span class="seclabel" style="align-self:center;margin-right:auto;font-size:12px">-- ${caRng}</span>
+      <button class="btn sec" onclick="closeComposer()">Cancel</button>
+      <button class="btn sec" onclick="askInChat()">Ask in chat →</button>
+      <button class="btn pri" onclick="addComment()">Add comment</button></div></div>`;
+  }
+  return h;
+}
+
+function renderFile(f){
+  const viewed=viewedFiles.has(f.path);
+  const open=!collapsedFiles.has(f.path);
+  const i=f.path.lastIndexOf('/');
+  const comments=(S.comments||[]).filter(c=>c.file===f.path);
+  let h=`<div class="dfile ${open?'open':''} ${viewed?'viewed':''}">
+    <div class="dhead" onclick="toggleFile('${esc(f.path)}')">
+    <span style="color:var(--faint);font-size:12px">${open?'⌄':'›'}</span>
+    <span class="fname">${esc(i<0?f.path:f.path.slice(i+1))}</span>
+    <span class="fdir">${esc(i<0?'':f.path.slice(0,i))}</span>
+    ${f._g?`<span class="chip" title="change group ${f._g.group}">${String(f._g.group).padStart(2,'0')}</span>`:''}
+    <span class="fstat"><span style="color:var(--green)">+${f.additions}</span> <span style="color:var(--red)">−${f.deletions}</span></span>
+    <label class="viewedbox" onclick="event.stopPropagation()">
+      <input type="checkbox" ${viewed?'checked':''} onchange="setViewed('${esc(f.path)}',this.checked)">viewed</label>
+  </div><div class="dbody">`;
+  if(open){
+    // findings anchored in this file -> severity marker per line (highest severity wins)
+    const sevRank={'Bug':0,'Investigate':1,'Informational':2};
+    const marks=(S.findings||[]).filter(x=>x.file===f.path && x.line_from)
+      .sort((a,b)=>(sevRank[a.severity]??3)-(sevRank[b.severity]??3));
+    const markFor = nl => nl!=null ? marks.find(x=>nl>=x.line_from && nl<=(x.line_to||x.line_from)) : null;
+    const rc={i:0};   // physical row counter across the file's hunks — selection unit
+    for(const hk of f.hunks){
+      h+=`<div class="hunkhdr">${esc(hk.header)}</div>`;
+      h+= diffMode==='sbs' ? renderHunkSbs(f,hk,comments,markFor,rc) : renderHunkInline(f,hk,comments,markFor,rc);
+    }
+  }
+  return h+`</div></div>`;
+}
+function flatRows(path){ const f=parseCachedDiff().find(x=>x.path===path); return f ? f.hunks.flatMap(h=>h.lines) : []; }
+function fbar(mk){
+  return mk?`<span class="fbar sevbar-${mk.severity}" title="${esc(mk.severity)}: ${esc(mk.title)} — click to view finding" onclick="event.stopPropagation();focusFinding(${mk.id})"></span>`:'';
+}
+
+function renderHunkInline(f,hk,comments,markFor,rc){
+  let h='';
+  for(const [t,ol,nl,txt] of hk.lines){
+    const ri=rc.i++;
+    const cls=t==='+'?'add':t==='-'?'del':'ctx';
+    const inHl = hl && hl.file===f.path && nl!=null && nl>=hl.from && nl<=hl.to;
+    const ca=composerAt;
+    const inSel = ca && ca.file===f.path && ri>=ca.riFrom && ri<=ca.riTo;
+    h+=`<div class="dline ${cls} ${inHl?'lnhl':''} ${inSel?'selng':''}" data-k="${esc(f.path)}|${ri}">${fbar(markFor(nl))}
+      <span class="ln">${ol??''}</span><span class="ln">${nl??''}</span>
+      <span class="plus can" title="click to comment · drag to select lines (added and removed together is fine)">+</span>
+      <span class="txt">${esc(t)}${esc(txt)}</span></div>`;
+    h+=lineWidgets(f,comments,t,ol,nl,ri);
+  }
+  return h;
+}
+
+/* pair deletions with additions for a split view; each physical line keeps its row index */
+function renderHunkSbs(f,hk,comments,markFor,rc){
+  const wrapped=hk.lines.map(ln=>({ln, ri:rc.i++}));
+  const rows=[]; let dels=[], addsQ=[];
+  const flush=()=>{
+    const n=Math.max(dels.length,addsQ.length);
+    for(let i=0;i<n;i++) rows.push([dels[i]||null, addsQ[i]||null]);
+    dels=[]; addsQ=[];
+  };
+  for(const w of wrapped){
+    if(w.ln[0]==='-') dels.push(w);
+    else if(w.ln[0]==='+') addsQ.push(w);
+    else { flush(); rows.push([w,w]); }
+  }
+  flush();
+  let h='';
+  const cell=(w,side)=>{
+    if(!w) return `<div class="sbscell empty"><span class="ln"></span><span class="txt"></span></div>`;
+    const [t,ol,nl,txt]=w.ln;
+    const cls=t==='+'?'add':t==='-'?'del':'ctx';
+    const num=side==='old'?ol:nl;
+    const anchor = side==='new' ? nl!=null : t==='-';        // removed lines anchor on the old side
+    const inHl = side==='new' && hl && hl.file===f.path && nl!=null && nl>=hl.from && nl<=hl.to;
+    const mk = side==='new' ? markFor(nl) : null;
+    const ca=composerAt;
+    const inSel = ca && ca.file===f.path && w.ri>=ca.riFrom && w.ri<=ca.riTo;
+    return `<div class="sbscell ${cls} ${inHl?'lnhl':''} ${inSel?'selng':''}" data-k="${esc(f.path)}|${w.ri}">${fbar(mk)}<span class="ln">${num??''}</span>
+      <span class="plus ${anchor?'can':''}" ${anchor?'title="click to comment · drag to select lines"':''}>+</span>
+      <span class="txt">${esc(txt)}</span></div>`;
+  };
+  for(const [l,r] of rows){
+    h+=`<div class="sbsrow">${cell(l && l.ln[0]!=='+'?l:null,'old')}${cell(r && r.ln[0]!=='-'?r:null,'new')}</div>`;
+    if(l && l.ln[0]==='-') h+=lineWidgets(f,comments,'-',l.ln[1],null,l.ri);
+    if(r && r.ln[0]!=='-') h+=lineWidgets(f,comments,r.ln[0],r.ln[1],r.ln[2],r.ri);
+  }
+  return h;
+}
+
+function toggleFile(p){ collapsedFiles.has(p)?collapsedFiles.delete(p):collapsedFiles.add(p); composerAt=null; render(); }
+function setViewed(p,checked){
+  if(checked){ viewedFiles.add(p); collapsedFiles.add(p); }
+  else { viewedFiles.delete(p); collapsedFiles.delete(p); }
+  render();
+}
+function openComposer(file, riFrom, riTo){
+  const sel = flatRows(file).slice(riFrom, riTo+1);
+  const newNums = sel.filter(r=>r[2]!=null).map(r=>r[2]);
+  const delNums = sel.filter(r=>r[0]==='-').map(r=>r[1]);
+  let side, line, lineTo;
+  if(newNums.length && delNums.length){ side='rows'; line=riFrom; lineTo=riTo; }        // mixed selection
+  else if(newNums.length){ side='new'; line=Math.min(...newNums); const mx=Math.max(...newNums); lineTo=mx>line?mx:undefined; }
+  else if(delNums.length){ side='old'; line=Math.min(...delNums); const mx=Math.max(...delNums); lineTo=mx>line?mx:undefined; }
+  else return;
+  composerAt={file, side, line, lineTo, riFrom, riTo};
+  render(); $('composerbox')?.focus();
+}
+function closeComposer(){ composerAt=null; render(); }
+async function addComment(){
+  const body=$('composerbox').value.trim(); if(!body) return;
+  const ca=composerAt;
+  await api(`/api/entries/${entryId}/comments`,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({file:ca.file, line:ca.line, line_to:ca.lineTo||null, side:ca.side, body})});
+  composerAt=null; await refresh();
+}
+
+/* ---------- drag selection (GitHub-style): mousedown on a +, drag over any rows, release ---------- */
+document.addEventListener('mousedown', e=>{
+  const p=e.target.closest('.plus.can'); if(!p) return;
+  const holder=p.closest('[data-k]'); if(!holder) return;
+  e.preventDefault();
+  const [file,ri]=holder.dataset.k.split('|');
+  dragSel={file,start:+ri,end:+ri};
+  paintSel();
+});
+document.addEventListener('mouseover', e=>{
+  if(!dragSel) return;
+  const el=e.target.closest('[data-k]'); if(!el) return;
+  const [file,ri]=el.dataset.k.split('|');
+  if(file===dragSel.file){ dragSel.end=+ri; paintSel(); }
+});
+document.addEventListener('mouseup', ()=>{
+  if(!dragSel) return;
+  const {file,start,end}=dragSel;
+  dragSel=null; clearSel();
+  openComposer(file, Math.min(start,end), Math.max(start,end));
+});
+function paintSel(){
+  const {file,start,end}=dragSel, lo=Math.min(start,end), hi=Math.max(start,end);
+  document.querySelectorAll('[data-k]').forEach(el=>{
+    const [f,ri]=el.dataset.k.split('|');
+    el.classList.toggle('selng', f===file && +ri>=lo && +ri<=hi);
+  });
+}
+function clearSel(){ document.querySelectorAll('.selng').forEach(el=>el.classList.remove('selng')); }
+
+/* ---------- send selection to chat: quote the physical rows with diff prefixes ---------- */
+function chatQuote(ca){
+  const sel = flatRows(ca.file).slice(ca.riFrom, ca.riTo+1);
+  if(!sel.length) return '';
+  const label = ca.side==='rows' ? 'mixed selection (added + removed)'
+    : `${ca.line}${ca.lineTo?'–'+ca.lineTo:''}${ca.side==='old'?' (removed)':''}`;
+  const body = sel.map(r=>(r[0]===' '?' ':r[0])+r[3]).join('\n');
+  return '```\n'+ca.file+':'+label+'\n'+body+'\n```\n';
+}
+function askInChat(){
+  chatDraft = chatQuote(composerAt) + (chatDraft?'\n'+chatDraft:'');
+  composerAt=null; rtab='chat'; render();
+  const el=$('chatinput'); if(el){ el.focus(); el.selectionStart=el.selectionEnd=el.value.length; }
+}
+async function delComment(id){ await api(`/api/comments/${id}`,{method:'DELETE'}); await refresh(); }
+
+function renderRight(){
+  const e=S.entry, f=S.findings||[], ci=S.ci_runs||[];
+  let h=`<div class="rtabs"><div class="rtab ${rtab==='info'?'active':''}" onclick="setRtab('info')">Info</div>
+    <div class="rtab ${rtab==='chat'?'active':''}" onclick="setRtab('chat')">Chat</div></div>`;
+  if(rtab==='chat'){
+    if(!chatLog.length && !chatPending)
+      h+=`<div style="border:1px dashed var(--border2);border-radius:8px;padding:26px 20px;text-align:center;background:#fff;font-size:14px;color:var(--muted);line-height:1.6">Ask about this patch — why a hunk exists, what a function does, where a symbol is used.<br><br><span class="seclabel" style="font-size:12px">-- tip: drag over diff lines and pick "Ask in chat"</span></div>`;
+    for(const m of chatLog)
+      h+= m.role==='user' ? `<div class="cb user">${mdMini(m.content)}</div>`
+                          : `<div class="cb bot md">${md(m.content)}</div>`;
+    if(chatPending) h+=busy('PatchLens is thinking…');
+    h+=`<textarea id="chatinput" placeholder="Ask PatchLens…" oninput="chatDraft=this.value;growChat(this)" onkeydown="chatKey(event)">${esc(chatDraft)}</textarea>
+    <div style="display:flex;justify-content:flex-end;margin-top:8px">
+      <button class="btn pri" ${chatPending?'disabled style="opacity:.5"':''} onclick="sendChat()">Send →</button></div>`;
+    $('rightrail').innerHTML=h;
+    growChat($('chatinput'));   // size to hydrated/seeded content
+    return;
+  }
+  const order={'Bug':0,'Investigate':1,'Informational':2};
+  const sorted=[...f].sort((a,b)=>(order[a.severity]??3)-(order[b.severity]??3));
+  h+=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <span class="seclabel">-- findings</span>
+    ${f.some(x=>!x.read)?`<button class="markread" onclick="markAllRead()">Mark all as read</button>`:''}</div>`;
+  if(!sorted.length) h+= running()?busy('Reviewing for correctness…'):'<div style="font-size:13px;color:var(--dim);padding:12px 2px">No findings.</div>';
+  for(const x of sorted){
+    const dot = x.severity==='Bug'?'var(--red)':x.severity==='Investigate'?'var(--amberdot)':'#b3bec7';
+    const sevc = x.severity==='Bug'?'var(--red)':x.severity==='Investigate'?'var(--amber)':'var(--dim)';
+    const dim = x.severity==='Informational';
+    const range = `${x.line_from??'?'}${x.line_to&&x.line_to>x.line_from?'–'+x.line_to:''}`;
+    h+=`<div class="frow ${dim?'dim':''} ${flashId===x.id?'flash':''}" id="frow-${x.id}"><div class="in">
+      <span class="fdot" style="background:${dot}"></span>
+      <div><div class="ft">${mdMini(x.title)}</div>
+      <div class="fm"><span class="sev" style="color:${sevc}">${x.severity}</span>
+        <span class="loc" title="jump to line${x.line_to&&x.line_to>x.line_from?'s':''} ${range}" onclick="jumpTo('${esc(x.file)}',${x.line_from??0},${x.line_to||x.line_from||0})">${esc(x.file.split('/').pop())}:${range}</span>
+        ${x.read?'<span style="color:#b3bec7;margin-left:6px">· Read</span>':''}</div>
+      ${x.detail?`<div class="fdetail">${mdMini(x.detail)}</div>`:''}</div></div></div>`;
+  }
+  const done=ci.filter(c=>c.status==='success').length, bad=ci.filter(c=>['failure','timed_out','cancelled'].includes(c.status));
+  h+=`<div style="display:flex;align-items:center;justify-content:space-between;margin:24px 0 0">
+    <span class="seclabel">-- cfbot ci</span><span class="chip" style="font-size:12.5px;padding:2px 9px">${done}/${ci.length}</span></div>`;
+  if(ci.length){
+    h+=`<div class="cibar"><div style="flex:${done||0};background:var(--greenbar)"></div>${bad.length?`<div style="flex:${bad.length};background:var(--red)"></div>`:''}${ci.length-done-bad.length?`<div style="flex:${ci.length-done-bad.length};background:var(--border2)"></div>`:''}</div>
+    <div style="margin-top:12px;font-size:13.5px;padding-bottom:20px;border-bottom:1px solid var(--rowline)">`;
+    for(const c of bad) h+=`<div style="color:var(--red);font-weight:600">✕ ${esc(c.task)}</div><div class="mono" style="font-size:12px;color:var(--dim);margin:3px 0 9px"><a href="${esc(c.detail_url)}" target="_blank">details ↗</a></div>`;
+    for(const c of ci.filter(c=>!['success','failure','timed_out','cancelled'].includes(c.status))) h+=`<div style="color:var(--dim);margin-top:6px">◌ ${esc(c.task)} — ${esc(c.status)}</div>`;
+    h+=`</div>`;
+  } else h+= running()?busy('Fetching check runs…'):'<div style="font-size:13px;color:var(--dim);padding:12px 2px">No CI data.</div>';
+  h+=`<div class="seclabel" style="margin:22px 0 2px">-- entry</div><div class="meta">
+    <div class="row" style="align-items:center"><span class="k">Status</span><span class="statuschip" style="${statusStyle(e.status)}">${esc(e.status||'')}</span></div>
+    <div class="row"><span class="k">Target</span><span class="v">PostgreSQL ${esc(e.target_version||'—')}</span></div>
+    <div class="row"><span class="k">Latest</span><span class="v mono" style="font-size:12.5px">${esc(S.series?.version||'')} · ${esc((S.series?.fetched_at||'').slice(0,10))}</span></div>
+    <div class="row"><span class="k">Thread</span><span class="v">${(S.messages||[]).length} messages</span></div>
+    <div class="row"><span class="k">Authors</span><span class="v">${esc(e.authors||'')}</span></div>
+    <div class="row"><span class="k">Reviewers</span><span class="v">${esc(e.reviewers||'None')}</span></div></div>`;
+  $('rightrail').innerHTML=h;
+}
+function setRtab(t){ rtab=t; render(); }
+function growChat(el){
+  if(!el) return;
+  el.style.height='auto';
+  el.style.height=Math.max(110, Math.min(el.scrollHeight+2, innerHeight*0.4))+'px';
+}
+function chatKey(e){ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); } }
+async function sendChat(){
+  const text=($('chatinput')?.value||'').trim();
+  if(!text || chatPending) return;
+  chatLog.push({role:'user',content:text});
+  chatDraft=''; chatPending=true; render();
+  $('rightrail').scrollTop=1e9;
+  try{
+    const r=await api(`/api/entries/${entryId}/chat`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({messages:chatLog})});
+    const j=await r.json().catch(()=>({}));
+    chatLog.push({role:'assistant',content:r.ok?j.reply:`Error: ${j.detail||r.status}`});
+  }catch(err){ chatLog.push({role:'assistant',content:'Error: '+err}); }
+  chatPending=false; render();
+  $('rightrail').scrollTop=1e9;
+}
+async function markAllRead(){ await api(`/api/entries/${entryId}/findings/read`,{method:'POST'}); await refresh(); }
+function jumpTo(path, from, to){
+  tab='analysis'; collapsedFiles.delete(path);
+  hl = from ? {file:path, from, to:to||from} : null;
+  render();
+  setTimeout(()=>{
+    const line = document.querySelector('.lnhl');
+    if(line){ line.scrollIntoView({block:'center'}); return; }
+    for(const el of document.querySelectorAll('.dhead .fname'))       // fallback: file header
+      if(el.textContent===path.split('/').pop()){ el.scrollIntoView({block:'center'}); break; }
+  },50);
+}
+
+/* ---------- resizable rails ---------- */
+let railW = JSON.parse(localStorage.getItem('pl_rails')||'{"l":320,"r":320}');
+function applyRails(){ $('review').style.gridTemplateColumns=`${railW.l}px 5px minmax(0,1fr) 5px ${railW.r}px`; }
+function initGutters(){
+  for(const [id,side] of [['lgutter','l'],['rgutter','r']]){
+    const g=$(id);
+    g.addEventListener('mousedown', e=>{
+      e.preventDefault(); g.classList.add('drag');
+      const startX=e.clientX, startW=railW[side];
+      const move=ev=>{
+        const d=ev.clientX-startX;
+        railW[side]=Math.min(560,Math.max(180, side==='l'?startW+d:startW-d));
+        applyRails();
+      };
+      const up=()=>{ g.classList.remove('drag'); localStorage.setItem('pl_rails',JSON.stringify(railW));
+        document.removeEventListener('mousemove',move); document.removeEventListener('mouseup',up); };
+      document.addEventListener('mousemove',move); document.addEventListener('mouseup',up);
+    });
+  }
+  applyRails();
+}
+
+/* ---------- finish review modal ---------- */
+function openModal(){
+  $('modalsub').textContent = `entry ${entryId} · reply to thread on pgsql-hackers`;
+  $('modaldrafts').innerHTML = (S.comments||[]).map(c=>`<div class="dc"><div class="loc">${esc(c.file)}${c.side==='rows'?' (mixed selection)':`:${c.line}${c.line_to?'–'+c.line_to:''}${c.side==='old'?' (removed line)':''}`}</div><div class="b">${esc(c.body)}</div></div>`).join('') || '<div style="font-size:13.5px;color:var(--dim)">No draft comments — add some from the Diffs section, or send summary remarks only.</div>';
+  $('emailout').style.display='none'; $('copybtn').style.display='none'; $('mailtobtn').style.display='none';
+  $('composebtn').style.display='inline-block';
+  $('modalbg').style.display='flex';
+}
+function closeModal(){ $('modalbg').style.display='none'; }
+async function composeEmail(){
+  const r = await api(`/api/entries/${entryId}/compose`,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({summary:$('summarybox').value})});
+  const j = await r.json();
+  $('emailtext').textContent = j.email_text;
+  $('emailout').style.display='block';
+  $('copybtn').style.display='inline-block';
+  $('mailtobtn').style.display='inline-flex';
+  $('mailtobtn').href = j.mailto;
+  $('composebtn').style.display='none';
+}
+function copyEmail(){ navigator.clipboard.writeText($('emailtext').textContent); $('copybtn').textContent='Copied ✓'; setTimeout(()=>$('copybtn').textContent='Copy email',1500); }
+
+/* ---------- boot ---------- */
+$('cfinput').addEventListener('keydown', e=>{ if(e.key==='Enter') go(); });
+initGutters();
+window.addEventListener('hashchange', route);
+route();
+</script>
+</body>
+</html>

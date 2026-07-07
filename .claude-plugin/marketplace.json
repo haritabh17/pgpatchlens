@@ -1,0 +1,11 @@
+{
+  "name": "pgpatchlens",
+  "owner": { "name": "Haritabh Gupta" },
+  "plugins": [
+    {
+      "name": "patchlens",
+      "source": "./plugin",
+      "description": "Review PostgreSQL commitfest patches in a local web UI"
+    }
+  ]
+}
