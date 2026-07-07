@@ -59,7 +59,9 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 #landerr{margin-top:12px;color:var(--red);font-size:14px;display:none}
 #recent{margin-top:44px;max-width:860px}
 #recent .tbl{background:#fff;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-top:10px}
-#recent .hdr,#recent .row{display:grid;grid-template-columns:100px 1fr 170px 110px;gap:16px;padding:13px 18px;align-items:center}
+#recent .hdr,#recent .row{display:grid;grid-template-columns:100px 1fr 170px 110px 22px;gap:16px;padding:13px 18px;align-items:center}
+#recent .zap{color:var(--faint);cursor:pointer;text-align:center;border-radius:4px}
+#recent .zap:hover{color:#fff;background:var(--red)}
 #recent .hdr{padding:10px 18px;background:#f0f3f6;border-bottom:1px solid var(--border);font-size:11.5px;font-weight:600;letter-spacing:.08em;color:var(--dim)}
 #recent .row{border-bottom:1px solid var(--hair);cursor:pointer}
 #recent .row:last-child{border-bottom:none}
@@ -289,7 +291,7 @@ h2.sec{margin:36px 0 0;font-family:var(--serif);font-size:22px;font-weight:600}
   <div id="recent" style="display:none">
     <div class="inlabel">-- recent entries</div>
     <div class="tbl">
-      <div class="hdr"><span>ENTRY</span><span>TITLE</span><span>STATUS</span><span>LATEST</span></div>
+      <div class="hdr"><span>ENTRY</span><span>TITLE</span><span>STATUS</span><span>LATEST</span><span></span></div>
       <div id="recentrows"></div>
     </div>
   </div>
@@ -427,6 +429,26 @@ async function refresh(){
   const r = await api(`/api/entries/${entryId}`);
   if(r.ok){ S = await r.json(); render(); }
 }
+async function delEntry(id){
+  if(!confirm(`Remove entry ${id}? This deletes its analysis, draft comments, and chat.`)) return;
+  const r = await api(`/api/entries/${id}`,{method:'DELETE'});
+  if(!r.ok){ alert((await r.json().catch(()=>({}))).detail || 'delete failed'); return; }
+  loadRecent();
+}
+async function reanalyze(){
+  if(!confirm('Re-run the analysis for this entry? Draft comments and chat are kept; groups and findings are regenerated.')) return;
+  await api('/api/entries',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({url:String(entryId), force:true})});
+  steps=[]; if(es) es.close();
+  es = new EventSource(`/api/entries/${entryId}/stream`);
+  es.onmessage = async ev => {
+    const step = JSON.parse(ev.data).step;
+    steps.push(step);
+    if(step==='done' || step==='error') es.close();
+    await refresh();
+  };
+  await refresh();
+}
 async function loadStatus(){
   try{
     const j = await (await api('/api/status')).json();
@@ -444,6 +466,7 @@ async function loadRecent(){
     <span style="font-size:14.5px">${esc(e.title)}</span>
     <span><span class="statuschip" style="${statusStyle(e.status)}">${esc(e.status||'')}</span></span>
     <span class="mono" style="font-size:12.5px;color:var(--dim)">${esc(e.version||'')} · ${esc((e.fetched_at||'').slice(0,10))}</span>
+    <span class="zap" title="remove this entry (deletes analysis, drafts, and chat)" onclick="event.stopPropagation();delEntry(${e.id})">✕</span>
   </div>`).join('');
 }
 function statusStyle(s){
@@ -505,6 +528,7 @@ function renderCenter(){
     <span style="margin-left:6px">${files.length} file${files.length===1?'':'s'}</span>
     <span class="mono" style="color:var(--green)">+${adds}</span>
     <span class="mono" style="color:var(--red)">−${dels}</span>
+    <button title="re-fetch the series and re-run analysis (keeps your drafts and chat)" onclick="reanalyze()" ${running()?'disabled style="opacity:.4"':''} style="margin-left:auto;border:1px solid var(--border2);background:#fff;border-radius:6px;padding:4px 11px;font-size:12.5px;color:var(--muted);cursor:pointer">⟳ re-analyze</button>
   </div>
   <div class="tabs">
     <div class="tab ${tab==='analysis'?'active':''}" onclick="setTab('analysis')">Analysis</div>

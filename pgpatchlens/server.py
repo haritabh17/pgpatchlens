@@ -106,6 +106,7 @@ def run_pipeline(entry_id: int):
 
 class EntryReq(BaseModel):
     url: str
+    force: bool = False   # re-analyze: wipe derived data, keep comments/chat
 
 
 @app.post("/api/entries")
@@ -113,23 +114,42 @@ def create_entry(req: EntryReq):
     entry_id = ingest.normalize(req.url)
     if not entry_id:
         raise HTTPException(400, "could not resolve a commitfest entry from that input")
-    # ponytail: done = cached forever; add ?force=1 or staleness checks when needed
     a = db.one("SELECT state FROM analysis WHERE entry_id=?", (entry_id,))
-    if a and a["state"] == "done":
+    if a and a["state"] == "done" and not req.force:   # done = cached until forced
         _progress.setdefault(entry_id, []).append("done")
         return {"id": entry_id}
     with _lock:
         if entry_id not in _running:
             _running.add(entry_id)
-            # clear previous run's derived rows
-            sid = db.one("SELECT id FROM series WHERE entry_id=?", (entry_id,))
-            if sid:
-                for t in ("patches", "changes", "findings", "ci_runs"):
-                    db.run(f"DELETE FROM {t} WHERE series_id=?", (sid["id"],))
-            db.run("DELETE FROM messages WHERE entry_id=?", (entry_id,))
+            _clear_derived(entry_id)
             _progress[entry_id] = []
             threading.Thread(target=run_pipeline, args=(entry_id,), daemon=True).start()
     return {"id": entry_id}
+
+
+def _clear_derived(entry_id: int):
+    """Drop everything the pipeline regenerates; personal rows (comments, chat) survive."""
+    sid = db.one("SELECT id FROM series WHERE entry_id=?", (entry_id,))
+    if sid:
+        db.run("DELETE FROM finding_reads WHERE finding_id IN "
+               "(SELECT id FROM findings WHERE series_id=?)", (sid["id"],))
+        for t in ("patches", "changes", "findings", "ci_runs"):
+            db.run(f"DELETE FROM {t} WHERE series_id=?", (sid["id"],))
+    db.run("DELETE FROM messages WHERE entry_id=?", (entry_id,))
+
+
+@app.delete("/api/entries/{entry_id}")
+def delete_entry(entry_id: int):
+    with _lock:
+        if entry_id in _running:
+            raise HTTPException(409, "analysis is running — try again when it finishes")
+    _clear_derived(entry_id)
+    for t, col in (("series", "entry_id"), ("analysis", "entry_id"),
+                   ("comments", "entry_id"), ("chat_messages", "entry_id"),
+                   ("entries", "id")):
+        db.run(f"DELETE FROM {t} WHERE {col}=?", (entry_id,))
+    _progress.pop(entry_id, None)
+    return {"ok": True}
 
 
 @app.get("/api/entries")
