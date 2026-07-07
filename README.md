@@ -1,7 +1,7 @@
 # PatchLens
 
-Devin-Review-style analysis for PostgreSQL commitfest patches. Paste a
-commitfest entry (URL, bare id, or `postgr.es/m/` thread link) and get:
+Makes reviewing PostgreSQL commitfest patches easier. Paste a commitfest
+entry (URL, bare id, or `postgr.es/m/` thread link) and get:
 grouped, explained diffs · Bug/Investigate/Informational findings anchored to
 file:line · cfbot CI status · thread summary · inline draft comments composed
 into a ready-to-send pgsql-hackers reply.

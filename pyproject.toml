@@ -1,7 +1,7 @@
 [project]
 name = "pgpatchlens"
 version = "0.1.0"
-description = "Devin-Review-style analysis for PostgreSQL commitfest patches — local, subscription-powered via the claude/codex CLI"
+description = "Easier review of PostgreSQL commitfest patches — local web UI, subscription-powered via the claude/codex CLI"
 requires-python = ">=3.12"
 dependencies = [
     "anthropic>=0.116.0",
