@@ -39,6 +39,12 @@ codex plugin marketplace add haritabh17/pgpatchlens
 codex plugin add patchlens@pgpatchlens
 ```
 
+### Pi agent harness
+
+```bash
+pi install git:github.com/haritabh17/pgpatchlens
+```
+
 ### OpenCode (or any agent, or no agent)
 
 ```bash
@@ -99,5 +105,4 @@ uv run python pgpatchlens/ingest.py    # live: scrapes a real entry end to end
 - Finding diffing across patch versions ("resolved in v14") — `fingerprint` column already exists
 - Scheduled polling, tree-sitter symbol index (hunk headers carry function names already)
 - Re-analysis of a completed entry (currently cached forever; add `?force=1`)
-- `pi` agent wrapper (TypeScript extension) — check its extension API first
 - Direct SMTP send from the UI (mailto/copy covers it); public shared-analysis cache for local instances
