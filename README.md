@@ -6,16 +6,6 @@ grouped, explained diffs · Bug/Investigate/Informational findings anchored to
 file:line · cfbot CI status · thread summary · inline draft comments composed
 into a ready-to-send pgsql-hackers reply.
 
-## Run
-
-```sh
-uv sync
-uv run pgpatchlens open <commitfest link or id>   # starts server, opens browser
-# or: uv run pgpatchlens serve                     # foreground server on :8471
-```
-
-Background-server logs land in `~/.pgpatchlens/server.log`.
-
 ## Install (from your coding agent)
 
 After installing, type `/patchlens <link>` — the agent launches/reuses the
@@ -91,13 +81,17 @@ email — summary on top, each comment as quoted diff context — with
 `In-Reply-To`/`References` set to the latest thread message, plus a `mailto:`
 handoff (zero-infrastructure sending: the mail comes from *you*).
 
-## Self-tests
+## Development (from a checkout)
 
 ```sh
-uv run python pgpatchlens/db.py        # schema round-trip
-uv run python pgpatchlens/analyze.py   # diff parser + finding validator
-uv run python pgpatchlens/ingest.py    # live: scrapes a real entry end to end
+uv sync
+uv run pgpatchlens open <link>         # or: uv run pgpatchlens serve
+uv run python pgpatchlens/db.py        # self-test: schema round-trip
+uv run python pgpatchlens/analyze.py   # self-test: diff parser + finding validator
+uv run python pgpatchlens/ingest.py    # self-test: live, scrapes a real entry
 ```
+
+Background-server logs land in `~/.pgpatchlens/server.log`.
 
 ## Deferred (add when needed)
 
