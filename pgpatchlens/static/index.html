@@ -42,12 +42,6 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 #nav .links span{color:rgba(255,255,255,.72);cursor:pointer}
 #nav .links span:hover{color:#fff}
 #nav .links .active{color:#fff;font-weight:600}
-#nav .auth{display:flex;gap:10px;min-width:210px;justify-content:flex-end}
-#nav .auth .login{padding:7px 15px;border-radius:6px;border:1px solid rgba(255,255,255,.45);font-size:13.5px;font-weight:600;color:#fff}
-#nav .auth .login:hover{border-color:#fff}
-#nav .auth .signup{padding:7px 15px;border-radius:6px;background:#fff;font-size:13.5px;font-weight:600;color:var(--pg)}
-#nav .auth .signup:hover{background:#e9f0f5}
-#toast{position:fixed;top:70px;right:24px;background:var(--text);color:#fff;padding:10px 18px;border-radius:8px;font-size:13.5px;z-index:99;display:none}
 
 /* landing */
 #landing{max-width:1160px;margin:0 auto;padding:72px 32px 0}
@@ -274,19 +268,14 @@ h2.sec{margin:36px 0 0;font-family:var(--serif);font-size:22px;font-weight:600}
 <div id="nav">
   <div class="logo" onclick="goLanding()"><div class="mark">pg</div><span class="name">PatchLens</span></div>
   <div class="links">
-    <span onclick="goLanding()">Home</span>
-    <span class="active">Reviews</span>
-    <span onclick="window.open('https://wiki.postgresql.org/wiki/Reviewing_a_Patch','_blank')">Docs ↗</span>
+    <span class="active" onclick="goLanding()">Home</span>
+    <span onclick="window.open('https://wiki.postgresql.org/wiki/Reviewing_a_Patch','_blank')">Review guide ↗</span>
   </div>
-  <div class="auth">
-    <div class="login" onclick="toast('Community-account sign-in is coming soon — reviews compose to email in the meantime.')">Log in</div>
-    <div class="signup" onclick="toast('PatchLens uses your PostgreSQL community account — sign-up coming soon.')">Sign up</div>
-  </div>
+  <div style="min-width:210px"></div>
 </div>
-<div id="toast"></div>
 
 <div id="landing">
-  <div class="newline">-- new: cfbot CI results inline in every review</div>
+  <div class="newline" id="statusline">-- patchlens</div>
   <h1>Understand a <em style="font-style:italic">Postgres patch</em> before you open the diff.</h1>
   <p class="sub">PatchLens applies the latest series from the thread, organizes it into reviewable changes, and flags what needs a human — with cfbot CI alongside.</p>
   <div class="inwrap">
@@ -367,8 +356,6 @@ const UID = localStorage.pl_uid || (localStorage.pl_uid =
   (crypto.randomUUID ? crypto.randomUUID() : 'u'+Date.now()+Math.random().toString(36).slice(2)));
 const api = (url, opts={}) => fetch(url, {...opts, headers:{...(opts.headers||{}), 'X-PatchLens-User': UID}});
 
-function toast(msg){ const t=$('toast'); t.textContent=msg; t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',3200); }
-
 /* tiny markdown */
 function md(src){
   if(!src) return '';
@@ -404,7 +391,7 @@ function showLanding(){
   if(es) es.close();
   entryId = null;
   $('review').style.display='none'; $('landing').style.display='block';
-  loadRecent();
+  loadRecent(); loadStatus();
 }
 function goLanding(){ if(location.hash) location.hash=''; else showLanding(); }
 async function openEntry(id){
@@ -439,6 +426,13 @@ async function go(url){
 async function refresh(){
   const r = await api(`/api/entries/${entryId}`);
   if(r.ok){ S = await r.json(); render(); }
+}
+async function loadStatus(){
+  try{
+    const j = await (await api('/api/status')).json();
+    const label = j.llm==='api' ? 'anthropic api' : j.llm==='none' ? 'none found — install claude or codex' : `${j.llm} cli (your subscription)`;
+    $('statusline').textContent = `-- llm: ${label} · v${j.version}`;
+  }catch(e){ $('statusline').textContent = '-- patchlens'; }
 }
 async function loadRecent(){
   const r = await api('/api/entries'); if(!r.ok) return;

@@ -291,6 +291,20 @@ line numbers from the diff where relevant. Markdown."""
     return {"reply": reply}
 
 
+@app.get("/api/status")
+def status():
+    try:
+        llm = analyze._backend()
+    except RuntimeError:
+        llm = "none"
+    try:
+        from importlib.metadata import version
+        v = version("pgpatchlens")
+    except Exception:
+        v = "dev"
+    return {"llm": llm, "version": v}
+
+
 @app.get("/")
 def index():
     return FileResponse(STATIC / "index.html")
