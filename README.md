@@ -16,17 +16,36 @@ uv run pgpatchlens open <commitfest link or id>   # starts server, opens browser
 
 Background-server logs land in `~/.pgpatchlens/server.log`.
 
-### Use from your coding agent
+## Install (from your coding agent)
 
-```sh
-uv run pgpatchlens install all    # or: install claude | codex | opencode
+After installing, type `/patchlens <link>` — the agent launches/reuses the
+local server and hands you the review URL. Requires
+[`uv`](https://docs.astral.sh/uv/) plus a logged-in `claude` or `codex` CLI
+for the analysis LLM (your subscription pays; no API key needed).
+
+### Claude Code
+
+```
+/plugin marketplace add haritabh17/pgpatchlens
+```
+```
+/plugin install patchlens@pgpatchlens
 ```
 
-Then type `/patchlens <link>` in Claude Code, Codex, or OpenCode — the agent
-launches/reuses the server and hands you the URL. For distribution, the repo
-doubles as a Claude Code plugin marketplace (`/plugin marketplace add <repo>`
-→ `/plugin install patchlens`); `plugin/` holds the plugin, `.claude-plugin/`
-the marketplace manifest.
+### Codex
+
+```bash
+codex plugin marketplace add haritabh17/pgpatchlens
+codex plugin add patchlens
+```
+
+### OpenCode (or any agent, or no agent)
+
+```bash
+uvx --from git+https://github.com/haritabh17/pgpatchlens pgpatchlens install opencode
+# or skip agents entirely:
+uvx --from git+https://github.com/haritabh17/pgpatchlens pgpatchlens open <link>
+```
 
 LLM backend (auto-detected, override with `PGPATCHLENS_LLM=api|claude|codex`):
 the Anthropic API when `ANTHROPIC_API_KEY` is set, else the logged-in `claude`

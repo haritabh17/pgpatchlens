@@ -1,0 +1,6 @@
+{
+  "name": "patchlens",
+  "version": "0.1.0",
+  "description": "Review PostgreSQL commitfest patches in a local web UI: grouped diffs, LLM findings, cfbot CI, thread summary, and a composed -hackers reply.",
+  "author": { "name": "Haritabh Gupta", "url": "https://github.com/haritabh17" }
+}

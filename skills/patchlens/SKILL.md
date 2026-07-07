@@ -11,7 +11,7 @@ Open a PostgreSQL commitfest entry in the local PatchLens review UI
 Run:
 
 ```
-uvx pgpatchlens open "<the user's link or id>"
+uvx --from git+https://github.com/haritabh17/pgpatchlens pgpatchlens open "<the user's link or id>"
 ```
 
 - The command starts the local server if needed, kicks off analysis for new
@@ -19,7 +19,7 @@ uvx pgpatchlens open "<the user's link or id>"
   browser, and prints the URL.
 - Give the user the printed URL and tell them analysis streams in live if the
   entry is new.
-- No argument? Run `uvx pgpatchlens open` to open the PatchLens landing page.
+- No argument? Run `uvx --from git+https://github.com/haritabh17/pgpatchlens pgpatchlens open` to open the PatchLens landing page.
 - Requires `uv` (https://docs.astral.sh/uv/) and a logged-in `claude` or
   `codex` CLI for the analysis LLM. The server logs to
   ~/.pgpatchlens/server.log if something looks wrong.
