@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>pg_patchlens</title>
+<title>pgpatchlens</title>
 <script>(function(){var t=localStorage.pl_theme||'light';document.documentElement.setAttribute('data-theme',t);document.documentElement.style.colorScheme=t;})();</script>
 <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNyIgZmlsbD0iIzMzNjc5MSIvPjx0ZXh0IHg9IjE2IiB5PSIxNiIgZm9udC1mYW1pbHk9InVpLW1vbm9zcGFjZSxNZW5sbyxtb25vc3BhY2UiIGZvbnQtc2l6ZT0iMTciIGZvbnQtd2VpZ2h0PSI3MDAiIGZpbGw9IiNmZmZmZmYiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIj5wZzwvdGV4dD48L3N2Zz4=">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -285,7 +285,7 @@ h2.sec{margin:36px 0 0;font-family:var(--serif);font-size:22px;font-weight:600}
 <body>
 
 <div id="nav">
-  <div class="logo" onclick="goLanding()"><div class="mark">pg</div><span class="name">pg_patchlens</span></div>
+  <div class="logo" onclick="goLanding()"><div class="mark">pg</div><span class="name">pgpatchlens</span></div>
   <div class="links">
     <span class="active" onclick="goLanding()">Home</span>
     <span onclick="window.open('https://wiki.postgresql.org/wiki/Reviewing_a_Patch','_blank')">Review guide ↗</span>
@@ -299,7 +299,7 @@ h2.sec{margin:36px 0 0;font-family:var(--serif);font-size:22px;font-weight:600}
 <div id="landing">
   <div class="newline" id="statusline">-- patchlens</div>
   <h1>Review <em style="font-style:italic">Postgres patches</em>, faster.</h1>
-  <p class="sub">pg_patchlens applies the latest series from the thread, organizes it into reviewable changes, and flags what needs a human — with cfbot CI alongside.</p>
+  <p class="sub">pgpatchlens applies the latest series from the thread, organizes it into reviewable changes, and flags what needs a human — with cfbot CI alongside.</p>
   <div class="inwrap">
     <div class="inlabel">-- paste a commitfest entry</div>
     <div class="inputrow">
@@ -570,7 +570,7 @@ function renderCenter(){
   </div>`;
 
   if(tab==='analysis'){
-    h += `<div class="acard"><div class="ah"><span>pg_patchlens analysis</span></div>
+    h += `<div class="acard"><div class="ah"><span>pgpatchlens analysis</span></div>
       <div class="ab md">${a.overview_md ? md(a.overview_md) : (a.state==='error'?'<p style="color:var(--red)">Analysis failed — check server logs and retry.</p>': a.state==='no_branch'?'<p>cfbot has no branch for this entry — the series does not currently apply to master.</p>': busy('Reading the diff and grouping changes…'))}</div></div>`;
     if(a.summary_md) h += `<h2 class="sec">Summary</h2><div class="md">${md(a.summary_md)}</div>`;
     if(files.length){
@@ -906,8 +906,8 @@ function renderRight(){
     for(const m of chatLog)
       h+= m.role==='user' ? `<div class="cb user">${mdMini(m.content)}</div>`
                           : `<div class="cb bot md">${md(m.content)}</div>`;
-    if(chatPending) h+=busy('pg_patchlens is thinking…');
-    h+=`<textarea id="chatinput" placeholder="Ask pg_patchlens…" oninput="chatDraft=this.value;growChat(this)" onkeydown="chatKey(event)">${esc(chatDraft)}</textarea>
+    if(chatPending) h+=busy('pgpatchlens is thinking…');
+    h+=`<textarea id="chatinput" placeholder="Ask pgpatchlens…" oninput="chatDraft=this.value;growChat(this)" onkeydown="chatKey(event)">${esc(chatDraft)}</textarea>
     <div style="display:flex;justify-content:flex-end;margin-top:8px">
       <button class="btn pri" ${chatPending?'disabled style="opacity:.5"':''} onclick="sendChat()">Send →</button></div>`;
     $('rightrail').innerHTML=h;
