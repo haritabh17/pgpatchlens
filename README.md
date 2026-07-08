@@ -8,12 +8,22 @@ grouped, explained diffs · Bug/Investigate/Informational findings anchored to
 file:line · cfbot CI status · thread summary · inline draft comments composed
 into a ready-to-send pgsql-hackers reply.
 
-## Install (from your coding agent)
+## Get started
 
-After installing, type `/patchlens <link>` — the agent launches/reuses the
-local server and hands you the review URL. Requires
-[`uv`](https://docs.astral.sh/uv/) plus a logged-in `claude` or `codex` CLI
-for the analysis LLM (your subscription pays; no API key needed).
+Once it's installed for your agent (steps below), reviewing a patch is a single
+command:
+
+```
+/patchlens https://commitfest.postgresql.org/patch/5231
+```
+
+The agent starts the local server, analyzes the entry, and opens the review in
+your browser. `/patchlens` also accepts a bare id (`5231`) or a `postgr.es/m/`
+thread link.
+
+Install it once for your agent. Requires [`uv`](https://docs.astral.sh/uv/)
+plus a logged-in `claude` or `codex` CLI for the analysis LLM (your
+subscription pays; no API key needed).
 
 ### Claude Code
 
