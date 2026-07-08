@@ -1,6 +1,6 @@
-# pg_patchlens
+# pgpatchlens
 
-![pg_patchlens — grouped, explained diffs, findings anchored to file:line, cfbot CI, and a one-click -hackers reply](assets/hero.jpg)
+![pgpatchlens — grouped, explained diffs, findings anchored to file:line, cfbot CI, and a one-click -hackers reply](assets/hero.jpg)
 
 Makes reviewing PostgreSQL commitfest patches easier. Paste a commitfest
 entry (URL, bare id, or `postgr.es/m/` thread link) and get:
@@ -28,31 +28,31 @@ subscription pays; no API key needed).
 ### Claude Code
 
 ```
-/plugin marketplace add haritabh17/pg_patchlens
+/plugin marketplace add haritabh17/pgpatchlens
 ```
 ```
-/plugin install pgpatchlens@pg_patchlens
+/plugin install pgpatchlens@pgpatchlens
 ```
 
 ### Codex
 
 ```bash
-codex plugin marketplace add haritabh17/pg_patchlens
-codex plugin add pgpatchlens@pg_patchlens
+codex plugin marketplace add haritabh17/pgpatchlens
+codex plugin add pgpatchlens@pgpatchlens
 ```
 
 ### Pi agent harness
 
 ```bash
-pi install git:github.com/haritabh17/pg_patchlens
+pi install git:github.com/haritabh17/pgpatchlens
 ```
 
 ### OpenCode (or any agent, or no agent)
 
 ```bash
-uvx --from git+https://github.com/haritabh17/pg_patchlens pgpatchlens install opencode
+uvx --from git+https://github.com/haritabh17/pgpatchlens pgpatchlens install opencode
 # or skip agents entirely:
-uvx --from git+https://github.com/haritabh17/pg_patchlens pgpatchlens open <link>
+uvx --from git+https://github.com/haritabh17/pgpatchlens pgpatchlens open <link>
 ```
 
 LLM backend (auto-detected, override with `PGPATCHLENS_LLM=api|claude|codex`):
@@ -90,7 +90,7 @@ entry URL ─► scrape commitfest entry page (title/status/authors/thread msgid
           each step streams to the UI over SSE; review is useful ~10s in
 ```
 
-The UI follows the light pg_patchlens design comp (Postgres-blue band, Source
+The UI follows the light pgpatchlens design comp (Postgres-blue band, Source
 Serif/Sans/Code Pro). Diffs are expanded by default with an inline /
 side-by-side toggle (⚙ View, also `?view=sbs`); the red "viewed" checkbox on a
 file collapses it; the left/right rails are drag-resizable (persisted); the
@@ -115,9 +115,9 @@ handoff (zero-infrastructure sending: the mail comes from *you*).
 ```sh
 uv sync
 uv run pgpatchlens open <link>         # or: uv run pgpatchlens serve
-uv run python pg_patchlens/db.py        # self-test: schema round-trip
-uv run python pg_patchlens/analyze.py   # self-test: diff parser + finding validator
-uv run python pg_patchlens/ingest.py    # self-test: live, scrapes a real entry
+uv run python pgpatchlens/db.py        # self-test: schema round-trip
+uv run python pgpatchlens/analyze.py   # self-test: diff parser + finding validator
+uv run python pgpatchlens/ingest.py    # self-test: live, scrapes a real entry
 ```
 
 Background-server logs land in `~/.pgpatchlens/server.log`.

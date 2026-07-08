@@ -1,4 +1,4 @@
-"""pg_patchlens API: REST + SSE + static UI."""
+"""pgpatchlens API: REST + SSE + static UI."""
 import asyncio
 import json
 import threading
@@ -13,9 +13,9 @@ from pydantic import BaseModel
 # anonymous per-browser identity; a future community-account login claims these tokens
 UserToken = Header("anon", alias="X-PatchLens-User")
 
-from pg_patchlens import analyze, db, ingest
+from pgpatchlens import analyze, db, ingest
 
-app = FastAPI(title="pg_patchlens")
+app = FastAPI(title="pgpatchlens")
 STATIC = Path(__file__).resolve().parent / "static"
 
 # per-entry progress: list of step names; appended by the worker thread
@@ -284,7 +284,7 @@ def chat(entry_id: int, req: ChatReq, user: str = UserToken):
         raise HTTPException(404)
     e, a = st["entry"], st.get("analysis") or {}
     convo = "\n\n".join(f"[{m['role']}]\n{m['content']}" for m in req.messages[-12:])
-    prompt = f"""You are pg_patchlens chat, helping a reviewer understand a PostgreSQL commitfest patch.
+    prompt = f"""You are pgpatchlens chat, helping a reviewer understand a PostgreSQL commitfest patch.
 
 Patch: {e['title']} (status: {e['status']}, target: PostgreSQL {e.get('target_version') or '?'})
 
@@ -321,7 +321,7 @@ def status():
         llm, model, profile = "none", None, None
     try:
         from importlib.metadata import version
-        v = version("pg_patchlens")
+        v = version("pgpatchlens")
     except Exception:
         v = "dev"
     return {"llm": llm, "model": model, "profile": profile, "version": v}

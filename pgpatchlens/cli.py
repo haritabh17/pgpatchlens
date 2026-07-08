@@ -39,7 +39,7 @@ def ensure_server() -> bool:
     HOME.mkdir(exist_ok=True)
     log = open(HOME / "server.log", "ab")
     subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "pg_patchlens.server:app", "--port", str(PORT)],
+        [sys.executable, "-m", "uvicorn", "pgpatchlens.server:app", "--port", str(PORT)],
         stdout=log, stderr=log, start_new_session=True,
     )
     for _ in range(60):
@@ -51,7 +51,7 @@ def ensure_server() -> bool:
 
 def cmd_serve(args):
     import uvicorn
-    uvicorn.run("pg_patchlens.server:app", port=PORT, host="127.0.0.1")
+    uvicorn.run("pgpatchlens.server:app", port=PORT, host="127.0.0.1")
 
 
 def cmd_open(args):
@@ -69,12 +69,12 @@ def cmd_open(args):
 
 SKILL_MD = """---
 name: pgpatchlens
-description: Review a PostgreSQL commitfest patch in the pg_patchlens web UI. Use when the user runs /pgpatchlens or asks to review a commitfest entry, patch link, or postgr.es thread. Takes the entry URL, bare id, or postgr.es/m link as argument.
+description: Review a PostgreSQL commitfest patch in the pgpatchlens web UI. Use when the user runs /pgpatchlens or asks to review a commitfest entry, patch link, or postgr.es thread. Takes the entry URL, bare id, or postgr.es/m link as argument.
 ---
 
-# pg_patchlens
+# pgpatchlens
 
-Open a PostgreSQL commitfest entry in the local pg_patchlens review UI
+Open a PostgreSQL commitfest entry in the local pgpatchlens review UI
 (three-pane review: grouped diffs, findings, cfbot CI, thread, chat).
 
 Run:
@@ -88,11 +88,11 @@ Run:
   browser, and prints the URL.
 - Give the user the printed URL and tell them analysis streams in live if the
   entry is new.
-- No argument? Run `{cmd} open` to open the pg_patchlens landing page.
+- No argument? Run `{cmd} open` to open the pgpatchlens landing page.
 - The server logs to ~/.pgpatchlens/server.log if something looks wrong.
 """
 
-CODEX_PROMPT_MD = """Open a PostgreSQL commitfest entry in the local pg_patchlens review UI.
+CODEX_PROMPT_MD = """Open a PostgreSQL commitfest entry in the local pgpatchlens review UI.
 
 Run this shell command with the user's link/id (their message after /pgpatchlens):
 
@@ -104,14 +104,14 @@ the URL. Report the URL back. With no argument, run `{cmd} open`.
 """
 
 OPENCODE_COMMAND_MD = """---
-description: Review a PostgreSQL commitfest patch in the pg_patchlens web UI
+description: Review a PostgreSQL commitfest patch in the pgpatchlens web UI
 ---
 
 Run this shell command:
 
     {cmd} open "$ARGUMENTS"
 
-It starts the local pg_patchlens server if needed, triggers analysis for new
+It starts the local pgpatchlens server if needed, triggers analysis for new
 entries (~3 minutes, progress streams into the page), opens the browser, and
 prints the URL. Report the URL back to the user.
 """
@@ -135,7 +135,7 @@ def cmd_install(args):
 
 def main():
     ap = argparse.ArgumentParser(prog="pgpatchlens",
-                                 description="pg_patchlens — local PostgreSQL commitfest patch review")
+                                 description="pgpatchlens — local PostgreSQL commitfest patch review")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("serve", help="run the server in the foreground").set_defaults(fn=cmd_serve)
     p = sub.add_parser("open", help="open an entry (starts the server if needed)")

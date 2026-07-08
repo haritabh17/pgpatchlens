@@ -5,7 +5,7 @@ import urllib.parse
 
 import httpx
 
-UA = {"User-Agent": "pg_patchlens/0.1 (local dev; contact: none)"}
+UA = {"User-Agent": "pgpatchlens/0.1 (local dev; contact: none)"}
 CFBOT_REPO = "https://api.github.com/repos/postgresql-cfbot/postgresql"
 
 
