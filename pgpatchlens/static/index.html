@@ -524,8 +524,9 @@ function renderCenter(){
     <span class="mono" style="font-size:13px;color:var(--dim)">commitfest.postgresql.org / ${esc(e.cf_id||'')} / patch ${e.id}</span></div>
   <h1 id="title">${esc(e.title||'Loading…')}</h1>
   <div id="metarow">
-    <div class="av" style="width:26px;height:26px;font-size:10.5px">${initials(e.authors)}</div>
-    <span>${esc((e.authors||'').split(',')[0])}</span>
+    ${(e.authors||'').split(',').map(a=>a.trim()).filter(Boolean).map(a=>
+      `<div class="av" style="width:26px;height:26px;font-size:10.5px">${initials(a)}</div><span>${esc(a)}</span>`
+    ).join('') || '<span style="color:var(--dim)">unknown author</span>'}
     <span class="chip">master</span><span style="color:var(--faint)">←</span>
     <span class="chip">${esc(s.version||'v?')} series · ${npatch} patch${npatch===1?'':'es'}</span>
     <span style="margin-left:6px">${files.length} file${files.length===1?'':'s'}</span>
