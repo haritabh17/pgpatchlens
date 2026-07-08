@@ -533,7 +533,7 @@ function renderLeft(){
     const tot = g.files.reduce((t,f)=>{const s=statFor(f); return s?{a:t.a+s.a,d:t.d+s.d}:t;},{a:0,d:0});
     const gtot = badge(tot.a||tot.d?tot:null) || `<span style="color:var(--dim)">${g.files.length} file${g.files.length===1?'':'s'}</span>`;
     h += `<div class="group">
-      <div class="gt"><span class="gnum">${String(g.ordinal).padStart(2,'0')}</span><div class="gtitle">${esc(g.title)} <span style="white-space:nowrap;font-weight:400;font-size:12px;margin-left:4px">${gtot}</span></div></div>
+      <div class="gt"><span class="gnum">${String(g.ordinal).padStart(2,'0')}</span><div class="gtitle">${esc(g.title)}</div><span style="margin-left:auto;white-space:nowrap;font-weight:400;font-size:12px;padding-left:8px">${gtot}</span></div>
       <div class="gfiles">${g.files.map(f=>{const i=f.lastIndexOf('/');const s=statFor(f);return `<div style="display:flex;gap:8px"><span>${esc(i<0?f:f.slice(i+1))}<span style="color:var(--faint)">  ${esc(i<0?'':f.slice(0,i))}</span></span><span style="margin-left:auto;white-space:nowrap">${badge(s)}</span></div>`;}).join('')}</div>
       <div class="toggle" onclick="toggleGroup(${g.ordinal})">${open?'Hide':'Read'} explanation ›</div>
       ${open ? (g.explanation_md ? `<div class="expl">${md(g.explanation_md)}</div>${g.snippet?`<pre>${esc(g.snippet)}</pre>`:''}` : busy('Writing explanation…')) : ''}
