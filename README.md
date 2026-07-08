@@ -1,5 +1,7 @@
 # PatchLens
 
+![PatchLens — grouped, explained diffs, findings anchored to file:line, cfbot CI, and a one-click -hackers reply](assets/hero.jpg)
+
 Makes reviewing PostgreSQL commitfest patches easier. Paste a commitfest
 entry (URL, bare id, or `postgr.es/m/` thread link) and get:
 grouped, explained diffs · Bug/Investigate/Informational findings anchored to
