@@ -315,14 +315,16 @@ line numbers from the diff where relevant. Markdown."""
 def status():
     try:
         llm = analyze._backend()
+        model = analyze.effective_model()
+        profile = analyze.active_profile()
     except RuntimeError:
-        llm = "none"
+        llm, model, profile = "none", None, None
     try:
         from importlib.metadata import version
         v = version("pgpatchlens")
     except Exception:
         v = "dev"
-    return {"llm": llm, "version": v}
+    return {"llm": llm, "model": model, "profile": profile, "version": v}
 
 
 @app.get("/")

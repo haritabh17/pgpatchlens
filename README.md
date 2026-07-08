@@ -46,7 +46,22 @@ uvx --from git+https://github.com/haritabh17/pgpatchlens pgpatchlens open <link>
 LLM backend (auto-detected, override with `PGPATCHLENS_LLM=api|claude|codex`):
 the Anthropic API when `ANTHROPIC_API_KEY` is set, else the logged-in `claude`
 CLI, else the logged-in `codex` CLI — so analysis and chat run on the user's
-own subscription with zero key management.
+own subscription with zero key management. The landing page shows the active
+backend, model, and account.
+
+### Configuration (env vars, read at server start)
+
+| Variable | Effect |
+|---|---|
+| `PGPATCHLENS_MODEL` | Model on any backend (default `claude-opus-4-8`; Codex uses its own default when unset). |
+| `CLAUDE_CONFIG_DIR` | Which Claude login to use — point at a per-account config dir to pick a subscription (e.g. `~/.claude-work`). Shown as the account on the status line. |
+| `PGPATCHLENS_PORT` / `PGPATCHLENS_DB` | Server port / SQLite path. |
+
+These are read once when the server starts, so change them by relaunching:
+
+```sh
+CLAUDE_CONFIG_DIR="$HOME/.claude-work" PGPATCHLENS_MODEL=claude-sonnet-5 uv run pgpatchlens serve
+```
 
 ## How it works
 
@@ -68,7 +83,9 @@ Serif/Sans/Code Pro). Diffs are expanded by default with an inline /
 side-by-side toggle (⚙ View, also `?view=sbs`); the red "viewed" checkbox on a
 file collapses it; the left/right rails are drag-resizable (persisted); the
 sticky review bar previews the composed draft reply whenever comments exist;
-the landing page lists previously analyzed entries.
+the landing page lists previously analyzed entries, each removable, and a
+review can be re-run (`⟳ re-analyze`) when a new patch version lands —
+draft comments and chat survive the re-run.
 
 Multi-user without login: the browser mints an anonymous UUID (localStorage)
 and sends it as `X-PatchLens-User` on every call. Analysis/findings/CI/thread
@@ -92,11 +109,3 @@ uv run python pgpatchlens/ingest.py    # self-test: live, scrapes a real entry
 ```
 
 Background-server logs land in `~/.pgpatchlens/server.log`.
-
-## Deferred (add when needed)
-
-- Community-account SSO + posting directly to the commitfest app (compose/mailto covers the loop)
-- Finding diffing across patch versions ("resolved in v14") — `fingerprint` column already exists
-- Scheduled polling, tree-sitter symbol index (hunk headers carry function names already)
-- Re-analysis of a completed entry (currently cached forever; add `?force=1`)
-- Direct SMTP send from the UI (mailto/copy covers it); public shared-analysis cache for local instances

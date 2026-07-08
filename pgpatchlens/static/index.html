@@ -453,8 +453,10 @@ async function reanalyze(){
 async function loadStatus(){
   try{
     const j = await (await api('/api/status')).json();
+    const acct = j.profile ? ` · account: ${j.profile}` : '';
     const label = j.llm==='api' ? 'anthropic api' : j.llm==='none' ? 'none found — install claude or codex' : `${j.llm} cli (your subscription)`;
-    $('statusline').textContent = `-- llm: ${label} · v${j.version}`;
+    const model = j.model ? ` · ${j.model}` : '';
+    $('statusline').textContent = `-- llm: ${label}${acct}${model} · v${j.version}`;
   }catch(e){ $('statusline').textContent = '-- patchlens'; }
 }
 async function loadRecent(){

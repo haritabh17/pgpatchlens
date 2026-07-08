@@ -7,8 +7,34 @@ import shutil
 import subprocess
 import tempfile
 
-MODEL = "claude-opus-4-8"
+# PGPATCHLENS_MODEL overrides the model on every backend; unset means the
+# Claude default below (and Codex's own configured default).
+_MODEL_OVERRIDE = os.environ.get("PGPATCHLENS_MODEL")
+MODEL = _MODEL_OVERRIDE or "claude-opus-4-8"
 MAX_DIFF_CHARS = 80_000  # cap what we send per LLM call
+
+
+def effective_model() -> str:
+    """Human-readable model string for the status line."""
+    be = _backend()
+    if be == "codex":
+        return _MODEL_OVERRIDE or "codex default"
+    return MODEL
+
+
+def active_profile() -> str | None:
+    """Which login the CLI backend will use, from its config-dir env var.
+    e.g. CLAUDE_CONFIG_DIR=~/.claude-personal -> "personal". None = default login."""
+    be = _backend()
+    cfg = {"claude": "CLAUDE_CONFIG_DIR", "codex": "CODEX_HOME"}.get(be)
+    d = os.environ.get(cfg) if cfg else None
+    if not d:
+        return None
+    name = os.path.basename(os.path.normpath(d))
+    for pfx in (".claude-", ".claude", ".codex-", ".codex"):
+        if name.startswith(pfx):
+            return name[len(pfx):].lstrip("-.") or "default"
+    return name
 
 
 # ---------- unified diff parsing ----------
@@ -84,9 +110,10 @@ def _llm_raw(prompt: str) -> str:
     if be == "codex":    # the user's Codex login
         with tempfile.NamedTemporaryFile("r", suffix=".txt", delete=False) as out:
             outpath = out.name
+        model_flag = ["-m", _MODEL_OVERRIDE] if _MODEL_OVERRIDE else []
         try:
             r = subprocess.run(
-                ["codex", "exec", "--skip-git-repo-check", "-o", outpath, "-"],
+                ["codex", "exec", "--skip-git-repo-check", *model_flag, "-o", outpath, "-"],
                 input=prompt, capture_output=True, text=True, timeout=600,
                 cwd=tempfile.gettempdir(),
             )
