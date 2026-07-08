@@ -1,6 +1,6 @@
-# PatchLens
+# pg_patchlens
 
-![PatchLens — grouped, explained diffs, findings anchored to file:line, cfbot CI, and a one-click -hackers reply](assets/hero.jpg)
+![pg_patchlens — grouped, explained diffs, findings anchored to file:line, cfbot CI, and a one-click -hackers reply](assets/hero.jpg)
 
 Makes reviewing PostgreSQL commitfest patches easier. Paste a commitfest
 entry (URL, bare id, or `postgr.es/m/` thread link) and get:
@@ -14,11 +14,11 @@ Once it's installed for your agent (steps below), reviewing a patch is a single
 command:
 
 ```
-/patchlens https://commitfest.postgresql.org/patch/5231
+/pgpatchlens https://commitfest.postgresql.org/patch/5231
 ```
 
 The agent starts the local server, analyzes the entry, and opens the review in
-your browser. `/patchlens` also accepts a bare id (`5231`) or a `postgr.es/m/`
+your browser. `/pgpatchlens` also accepts a bare id (`5231`) or a `postgr.es/m/`
 thread link.
 
 Install it once for your agent. Requires [`uv`](https://docs.astral.sh/uv/)
@@ -28,31 +28,31 @@ subscription pays; no API key needed).
 ### Claude Code
 
 ```
-/plugin marketplace add haritabh17/pgpatchlens
+/plugin marketplace add haritabh17/pg_patchlens
 ```
 ```
-/plugin install patchlens@pgpatchlens
+/plugin install pgpatchlens@pg_patchlens
 ```
 
 ### Codex
 
 ```bash
-codex plugin marketplace add haritabh17/pgpatchlens
-codex plugin add patchlens@pgpatchlens
+codex plugin marketplace add haritabh17/pg_patchlens
+codex plugin add pgpatchlens@pg_patchlens
 ```
 
 ### Pi agent harness
 
 ```bash
-pi install git:github.com/haritabh17/pgpatchlens
+pi install git:github.com/haritabh17/pg_patchlens
 ```
 
 ### OpenCode (or any agent, or no agent)
 
 ```bash
-uvx --from git+https://github.com/haritabh17/pgpatchlens pgpatchlens install opencode
+uvx --from git+https://github.com/haritabh17/pg_patchlens pgpatchlens install opencode
 # or skip agents entirely:
-uvx --from git+https://github.com/haritabh17/pgpatchlens pgpatchlens open <link>
+uvx --from git+https://github.com/haritabh17/pg_patchlens pgpatchlens open <link>
 ```
 
 LLM backend (auto-detected, override with `PGPATCHLENS_LLM=api|claude|codex`):
@@ -90,7 +90,7 @@ entry URL ─► scrape commitfest entry page (title/status/authors/thread msgid
           each step streams to the UI over SSE; review is useful ~10s in
 ```
 
-The UI follows the light PatchLens design comp (Postgres-blue band, Source
+The UI follows the light pg_patchlens design comp (Postgres-blue band, Source
 Serif/Sans/Code Pro). Diffs are expanded by default with an inline /
 side-by-side toggle (⚙ View, also `?view=sbs`); the red "viewed" checkbox on a
 file collapses it; the left/right rails are drag-resizable (persisted); the
@@ -115,9 +115,9 @@ handoff (zero-infrastructure sending: the mail comes from *you*).
 ```sh
 uv sync
 uv run pgpatchlens open <link>         # or: uv run pgpatchlens serve
-uv run python pgpatchlens/db.py        # self-test: schema round-trip
-uv run python pgpatchlens/analyze.py   # self-test: diff parser + finding validator
-uv run python pgpatchlens/ingest.py    # self-test: live, scrapes a real entry
+uv run python pg_patchlens/db.py        # self-test: schema round-trip
+uv run python pg_patchlens/analyze.py   # self-test: diff parser + finding validator
+uv run python pg_patchlens/ingest.py    # self-test: live, scrapes a real entry
 ```
 
 Background-server logs land in `~/.pgpatchlens/server.log`.

@@ -1,10 +1,10 @@
 {
-  "name": "pgpatchlens",
+  "name": "pg_patchlens",
   "description": "Review PostgreSQL commitfest patches in a local web UI.",
   "owner": { "name": "Haritabh Gupta", "url": "https://github.com/haritabh17" },
   "plugins": [
     {
-      "name": "patchlens",
+      "name": "pgpatchlens",
       "source": "./",
       "description": "Review PostgreSQL commitfest patches in a local web UI: grouped diffs, LLM findings, cfbot CI, thread summary, and a composed -hackers reply.",
       "category": "productivity"

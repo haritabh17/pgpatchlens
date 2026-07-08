@@ -1,5 +1,5 @@
 [project]
-name = "pgpatchlens"
+name = "pg_patchlens"
 version = "0.1.0"
 description = "Easier review of PostgreSQL commitfest patches — local web UI, subscription-powered via the claude/codex CLI"
 requires-python = ">=3.12"
@@ -11,11 +11,11 @@ dependencies = [
 ]
 
 [project.scripts]
-pgpatchlens = "pgpatchlens.cli:main"
+pgpatchlens = "pg_patchlens.cli:main"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["pgpatchlens"]
+packages = ["pg_patchlens"]

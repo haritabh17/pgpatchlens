@@ -1,13 +1,13 @@
 {
-  "name": "@haritabh17/pgpatchlens",
+  "name": "@haritabh17/pg_patchlens",
   "version": "0.1.0",
   "type": "module",
   "description": "Review PostgreSQL commitfest patches in a local web UI: grouped diffs, LLM findings, cfbot CI, thread summary, and a composed -hackers reply.",
   "keywords": ["pi-package", "pi", "skills", "postgresql", "commitfest"],
-  "homepage": "https://github.com/haritabh17/pgpatchlens",
+  "homepage": "https://github.com/haritabh17/pg_patchlens",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/haritabh17/pgpatchlens.git"
+    "url": "git+https://github.com/haritabh17/pg_patchlens.git"
   },
   "author": {
     "name": "Haritabh Gupta",

@@ -1,5 +1,5 @@
 {
-  "name": "patchlens",
+  "name": "pgpatchlens",
   "description": "Review PostgreSQL commitfest patches in a local web UI: grouped diffs, LLM findings, cfbot CI, thread summary, draft comments, and a composed -hackers reply. Subscription-powered via your claude/codex CLI login.",
   "version": "0.1.0",
   "author": {

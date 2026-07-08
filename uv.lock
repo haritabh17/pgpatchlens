@@ -267,7 +267,7 @@ wheels = [
 ]
 
 [[package]]
-name = "pgpatchlens"
+name = "pg-patchlens"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

@@ -1,14 +1,14 @@
 {
-  "name": "pgpatchlens",
+  "name": "pg_patchlens",
   "interface": {
-    "displayName": "PatchLens"
+    "displayName": "pg_patchlens"
   },
   "plugins": [
     {
-      "name": "patchlens",
+      "name": "pgpatchlens",
       "source": {
         "source": "url",
-        "url": "https://github.com/haritabh17/pgpatchlens.git",
+        "url": "https://github.com/haritabh17/pg_patchlens.git",
         "ref": "main"
       },
       "policy": {

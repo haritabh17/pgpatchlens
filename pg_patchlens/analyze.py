@@ -147,7 +147,7 @@ def _skeleton(files: list[dict]) -> str:
 
 
 def pass_a_group(entry: dict, files: list[dict]) -> dict:
-    prompt = f"""You are PatchLens, reviewing a PostgreSQL commitfest patch series.
+    prompt = f"""You are pg_patchlens, reviewing a PostgreSQL commitfest patch series.
 
 Patch: {entry['title']} (target: PostgreSQL {entry.get('target_version') or '?'})
 
@@ -170,7 +170,7 @@ JSON schema:
 def pass_b_explain(entry: dict, groups: list[dict], diff: str) -> list[dict]:
     gl = "\n".join(f"{i+1}. {g['title']} — files: {', '.join(g['files'])}"
                    for i, g in enumerate(groups))
-    prompt = f"""You are PatchLens, explaining a PostgreSQL patch series to a reviewer.
+    prompt = f"""You are pg_patchlens, explaining a PostgreSQL patch series to a reviewer.
 
 Patch: {entry['title']}
 
@@ -199,7 +199,7 @@ regression-test coverage."""
 
 
 def pass_c_findings(entry: dict, diff: str) -> list[dict]:
-    prompt = f"""You are PatchLens, doing a correctness review of a PostgreSQL patch series.
+    prompt = f"""You are pg_patchlens, doing a correctness review of a PostgreSQL patch series.
 
 Patch: {entry['title']}
 
