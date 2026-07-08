@@ -497,15 +497,25 @@ function render(){
 
 function renderLeft(){
   const e=S.entry, groups=S.changes||[];
+  // per-file +/- from the parsed diff, keyed by full path and by basename (LLM shortens paths)
+  const stat={}, byBase={};
+  for(const f of (S.diff ? parseCachedDiff() : [])){
+    stat[f.path]={a:f.additions,d:f.deletions};
+    byBase[f.path.split('/').pop()]=stat[f.path];
+  }
+  const statFor = p => stat[p] || byBase[p.split('/').pop()] || null;
+  const badge = s => s ? `<span class="mono" style="color:var(--green)">+${s.a}</span>${s.d?` <span class="mono" style="color:var(--red)">−${s.d}</span>`:''}` : '';
   let h = `<div style="display:flex;justify-content:space-between;margin-bottom:6px">
     <span class="seclabel">-- reading order</span>
     <span class="seclabel" style="font-size:12px">${esc(e.cf_id||'CF')} · ${e.id}</span></div>`;
   if(!groups.length){ h += running() ? busy('Grouping hunks into changes…') : '<div class="busy">No change groups.</div>'; }
   for(const g of groups){
     const open = openGroup===g.ordinal;
+    const tot = g.files.reduce((t,f)=>{const s=statFor(f); return s?{a:t.a+s.a,d:t.d+s.d}:t;},{a:0,d:0});
     h += `<div class="group">
       <div class="gt"><span class="gnum">${String(g.ordinal).padStart(2,'0')}</span><div class="gtitle">${esc(g.title)}</div></div>
-      <div class="gfiles">${g.files.map(f=>{const i=f.lastIndexOf('/');return `<div>${esc(i<0?f:f.slice(i+1))}<span>  ${esc(i<0?'':f.slice(0,i))}</span></div>`;}).join('')}</div>
+      <div class="gmeta" style="margin:5px 0 0 26px;font-size:12px">${badge(tot.a||tot.d?tot:null) || `<span style="color:var(--dim)">${g.files.length} file${g.files.length===1?'':'s'}</span>`}</div>
+      <div class="gfiles">${g.files.map(f=>{const i=f.lastIndexOf('/');const s=statFor(f);return `<div style="display:flex;gap:8px"><span>${esc(i<0?f:f.slice(i+1))}<span style="color:var(--faint)">  ${esc(i<0?'':f.slice(0,i))}</span></span><span style="margin-left:auto;white-space:nowrap">${badge(s)}</span></div>`;}).join('')}</div>
       <div class="toggle" onclick="toggleGroup(${g.ordinal})">${open?'Hide':'Read'} explanation ›</div>
       ${open ? (g.explanation_md ? `<div class="expl">${md(g.explanation_md)}</div>${g.snippet?`<pre>${esc(g.snippet)}</pre>`:''}` : busy('Writing explanation…')) : ''}
     </div>`;
